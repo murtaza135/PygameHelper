@@ -14,9 +14,8 @@ class MovementComponent(object):
     
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
                 default_rotation=Rotator2.RIGHT, default_velocity=(0, 0), default_acceleration=(0, 0),
-                window_size=(800, 600), after_bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen_x=True,
-                should_wrap_screen_y=True, keybind_function_x="change_acceleration",
-                keybind_function_y="change_acceleration"):
+                window_size=(800, 600), after_bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen=(True, True),
+                keybind_functions=("change_acceleration", "change_acceleration")):
         self.parent = parent
         self.rect = rect
         self.rect.centerx, self.rect.centery = default_position[0], default_position[1]
@@ -31,16 +30,10 @@ class MovementComponent(object):
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
 
-        # self.after_bounce_velocity_ratio = after_bounce_velocity_ratio
-        self.should_wrap_screen_x = should_wrap_screen_x
-        self.should_wrap_screen_y = should_wrap_screen_y
-        self.keybind_function_x = keybind_function_x
-        self.keybind_function_y = keybind_function_y
-
         ratios_made_negative_or_zero = [abs(ratio)*(-1) for ratio in after_bounce_velocity_ratios]
         self.after_bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
-        # self.should_wrap_screen = XYTuple(*should_wrap_screen)
-        # self.keybind_functions = XYTuple(*keybind_functions)
+        self.should_wrap_screen = XYTuple(*should_wrap_screen)
+        self.keybind_functions = XYTuple(*keybind_functions)
 
     @property
     def keybinds(self):
@@ -111,15 +104,15 @@ class MovementComponent(object):
         self.set_new_position_y()
 
     def process_input_for_x(self):
-        if self.keybind_function_x == MovementComponent.CHANGE_ACCELERATION:
+        if self.keybind_functions.x == MovementComponent.CHANGE_ACCELERATION:
             self.apply_acceleration_x_using_pressed_keys()
-        elif self.keybind_function_x == MovementComponent.CHANGE_DIRECTION:
+        elif self.keybind_functions.x == MovementComponent.CHANGE_DIRECTION:
             self.change_direction_x_using_pressed_keys()
 
     def process_input_for_y(self):
-        if self.keybind_function_y == MovementComponent.CHANGE_ACCELERATION:
+        if self.keybind_functions.y == MovementComponent.CHANGE_ACCELERATION:
             self.apply_acceleration_y_using_pressed_keys()
-        elif self.keybind_function_y == MovementComponent.CHANGE_DIRECTION:
+        elif self.keybind_functions.y == MovementComponent.CHANGE_DIRECTION:
             self.change_direction_y_using_pressed_keys()
 
     def change_direction_x_using_pressed_keys(self):
@@ -158,13 +151,13 @@ class MovementComponent(object):
 
     def set_new_position_x(self):
         self.position = self.position.move(self.velocity.x + (0.5 * self.acceleration.x), 0)
-        if self.should_wrap_screen_x:
+        if self.should_wrap_screen.x:
             self.wrap_around_screen_x()
         self.rect.x = self.position.x
 
     def set_new_position_y(self):
         self.position = self.position.move(0, self.velocity.y + (0.5 * self.acceleration.y))
-        if self.should_wrap_screen_y:
+        if self.should_wrap_screen.y:
             self.wrap_around_screen_y()
         self.rect.y = self.position.y
 
