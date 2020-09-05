@@ -5,6 +5,7 @@ from keybinder import Keybinder
 from utilities import WHTuple, XYTuple, NESWTuple
 
 # TODO add independance from framerate
+# TODO prevent extra speed when both x and y have acceleration
 # TODO stop x from stopping when collision occurs in y
 
 class MovementComponent(object):
@@ -81,7 +82,7 @@ class MovementComponent(object):
                 self.velocity.x *= self.after_bounce_velocity_ratios.west
         else:
             self.acceleration.x += self.velocity.x * self.friction.x
-            self.velocity.x += self.acceleration.x
+            self.velocity.x += self.acceleration.x * self.tick
 
         self.set_new_position_x()
 
@@ -99,7 +100,7 @@ class MovementComponent(object):
                 self.jump_if_key_pressed()
         else:
             self.acceleration.y += self.velocity.y * self.friction.y
-            self.velocity.y += self.acceleration.y
+            self.velocity.y += self.acceleration.y * self.tick
 
         self.set_new_position_y()
 
@@ -150,13 +151,13 @@ class MovementComponent(object):
             self.acceleration.y += self.keybinds.get_value_for_option("down")
 
     def set_new_position_x(self):
-        self.position = self.position.move(self.velocity.x + (0.5 * self.acceleration.x), 0)
+        self.position = self.position.move((self.velocity.x * self.tick) + (0.5 * self.acceleration.x * self.tick**2), 0)
         if self.should_wrap_screen.x:
             self.wrap_around_screen_x()
         self.rect.x = self.position.x
 
     def set_new_position_y(self):
-        self.position = self.position.move(0, self.velocity.y + (0.5 * self.acceleration.y))
+        self.position = self.position.move(0, (self.velocity.y * self.tick) + (0.5 * self.acceleration.y * self.tick**2))
         if self.should_wrap_screen.y:
             self.wrap_around_screen_y()
         self.rect.y = self.position.y
