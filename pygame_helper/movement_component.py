@@ -4,12 +4,19 @@ from rotator2 import Rotator2
 from keybinder import Keybinder
 from utilities import WHGeometry
 
+# TODO add independance from framerate
+# TODO stop x from stopping when collision occurs in y
 
 class MovementComponent(object):
+
+    CHANGE_ACCELERATION = "change_acceleration"
+    CHANGE_DIRECTION = "change_direction"
     
-    def __init__(self, parent, rect, friction, default_position=(0, 0), default_rotation=Rotator2.RIGHT,
-                default_velocity=(0, 0), default_acceleration=(0, 0), window_size=(800, 600),
-                after_bounce_velocity_ratio=0, should_wrap_screen_x=True, should_wrap_screen_y=False):
+    def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
+                default_rotation=Rotator2.RIGHT, default_velocity=(0, 0), default_acceleration=(0, 0),
+                window_size=(800, 600), after_bounce_velocity_ratio=0, should_wrap_screen_x=True,
+                should_wrap_screen_y=True, keybind_function_x="change_acceleration",
+                keybind_function_y="change_acceleration"):
         self.parent = parent
         self.rect = rect
         self.rect.centerx, self.rect.centery = default_position[0], default_position[1]
@@ -20,17 +27,25 @@ class MovementComponent(object):
         self.velocity = Vector2(default_velocity)
         self.acceleration = Vector2(default_acceleration)
         self.friction = Vector2(friction)
-        self.start_of_new_frame_acceleration = Vector2(default_acceleration)
+        self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
 
         self.after_bounce_velocity_ratio = after_bounce_velocity_ratio
         self.should_wrap_screen_x = should_wrap_screen_x
         self.should_wrap_screen_y = should_wrap_screen_y
+        self.keybind_function_x = keybind_function_x
+        self.keybind_function_y = keybind_function_y
 
     @property
     def keybinds(self):
         return self._keybinds
+
+    @property
+    def tick(self):
+        tick_ms = self.parent.game_mode.game.clock.get_time()
+        tick_seconds = tick_ms / 1000
+        return tick_seconds
 
 
     def move_without_collision(self):
@@ -38,14 +53,14 @@ class MovementComponent(object):
         self.move_y_without_collision()
 
     def move_x_without_collision(self):
-        self.acceleration.x = self.start_of_new_frame_acceleration.x
+        self.acceleration.x = self.constant_acceleration_delta.x
         self.apply_acceleration_x_using_pressed_keys()
         self.acceleration.x += self.velocity.x * self.friction.x
         self.velocity.x += self.acceleration.x
         self.set_new_position_x()
 
     def move_y_without_collision(self):
-        self.acceleration.y = self.start_of_new_frame_acceleration.y
+        self.acceleration.y = self.constant_acceleration_delta.y
         self.apply_acceleration_y_using_pressed_keys()
         self.acceleration.y += self.velocity.y * self.friction.y
         self.velocity.y += self.acceleration.y
@@ -56,8 +71,9 @@ class MovementComponent(object):
         self.move_y_with_collision(collide_fn_y, group, dokill, collided)
 
     def move_x_with_collision(self, collide_fn, group, dokill=None, collided=None):
-        self.acceleration.x = self.start_of_new_frame_acceleration.x
-        self.apply_acceleration_x_using_pressed_keys()
+        self.acceleration.x = self.constant_acceleration_delta.x
+        # self.apply_acceleration_x_using_pressed_keys()
+        self.process_input_for_x()
 
         sprite_collided = collide_fn(group, dokill, collided)
         if sprite_collided is not None:
@@ -70,8 +86,9 @@ class MovementComponent(object):
         self.set_new_position_x()
 
     def move_y_with_collision(self, collide_fn, group, dokill=None, collided=None):
-        self.acceleration.y = self.start_of_new_frame_acceleration.y
-        self.apply_acceleration_y_using_pressed_keys()
+        self.acceleration.y = self.constant_acceleration_delta.y
+        # self.apply_acceleration_y_using_pressed_keys()
+        self.process_input_for_y()
 
         sprite_collided = collide_fn(group, dokill, collided)
         if sprite_collided is not None:
@@ -87,22 +104,51 @@ class MovementComponent(object):
 
         self.set_new_position_y()
 
+    def process_input_for_x(self):
+        if self.keybind_function_x == MovementComponent.CHANGE_ACCELERATION:
+            self.apply_acceleration_x_using_pressed_keys()
+        elif self.keybind_function_x == MovementComponent.CHANGE_DIRECTION:
+            self.change_direction_x_using_pressed_keys()
+
+    def process_input_for_y(self):
+        if self.keybind_function_y == MovementComponent.CHANGE_ACCELERATION:
+            self.apply_acceleration_y_using_pressed_keys()
+        elif self.keybind_function_y == MovementComponent.CHANGE_DIRECTION:
+            self.change_direction_y_using_pressed_keys()
+
+    def change_direction_x_using_pressed_keys(self):
+        pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
+            self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x) * (-1)
+        elif self.keybinds.is_key_pressed_for_option("right", pressed_keys):
+            self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x)
+        self.acceleration.x = self.constant_acceleration_delta.x
+
+    def change_direction_y_using_pressed_keys(self):
+        pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
+            self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y) * (-1)
+        elif self.keybinds.is_key_pressed_for_option("down", pressed_keys):
+            self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y)
+        self.acceleration.y = self.constant_acceleration_delta.y
 
     def apply_acceleration_x_using_pressed_keys(self):
         pressed_keys = pygame.key.get_pressed()
 
-        if self._keybinds.is_key_pressed_for_option("left", pressed_keys):
-            self.acceleration.x -= self._keybinds.get_value_for_option("left")
-        if self._keybinds.is_key_pressed_for_option("right", pressed_keys):
-            self.acceleration.x += self._keybinds.get_value_for_option("right")
+        if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
+            self.acceleration.x -= self.keybinds.get_value_for_option("left")
+        if self.keybinds.is_key_pressed_for_option("right", pressed_keys):
+            self.acceleration.x += self.keybinds.get_value_for_option("right")
 
     def apply_acceleration_y_using_pressed_keys(self):
         pressed_keys = pygame.key.get_pressed()
 
-        if self._keybinds.is_key_pressed_for_option("up", pressed_keys):
-            self.acceleration.y -= self._keybinds.get_value_for_option("up")
-        if self._keybinds.is_key_pressed_for_option("down", pressed_keys):
-            self.acceleration.y += self._keybinds.get_value_for_option("down")
+        if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
+            self.acceleration.y -= self.keybinds.get_value_for_option("up")
+        if self.keybinds.is_key_pressed_for_option("down", pressed_keys):
+            self.acceleration.y += self.keybinds.get_value_for_option("down")
 
     def set_new_position_x(self):
         self.position = self.position.move(self.velocity.x + (0.5 * self.acceleration.x), 0)
@@ -129,8 +175,8 @@ class MovementComponent(object):
             self.position.centery = self.window_size.height
 
     def jump_if_key_pressed(self):
-        if self._keybinds.is_key_pressed_for_option("jump"):
-            self.velocity.y = -self._keybinds.get_value_for_option("jump")
+        if self.keybinds.is_key_pressed_for_option("jump"):
+            self.velocity.y = -self.keybinds.get_value_for_option("jump")
 
     def move_x_back_if_collided(self, sprite_collided):
         if sprite_collided is not None:
