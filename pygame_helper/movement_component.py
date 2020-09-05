@@ -2,7 +2,8 @@ import pygame
 from pygame.math import Vector2
 from rotator2 import Rotator2
 from keybinder import Keybinder
-from utilities import WHGeometry
+from utilities import WHTuple
+from utilities import XYTuple
 
 # TODO add independance from framerate
 # TODO stop x from stopping when collision occurs in y
@@ -20,7 +21,7 @@ class MovementComponent(object):
         self.parent = parent
         self.rect = rect
         self.rect.centerx, self.rect.centery = default_position[0], default_position[1]
-        self.window_size = WHGeometry(*window_size)
+        self.window_size = WHTuple(*window_size)
 
         self.position = self.rect.copy()
         self.rotation = Rotator2(default_rotation)
@@ -72,7 +73,6 @@ class MovementComponent(object):
 
     def move_x_with_collision(self, collide_fn, group, dokill=None, collided=None):
         self.acceleration.x = self.constant_acceleration_delta.x
-        # self.apply_acceleration_x_using_pressed_keys()
         self.process_input_for_x()
 
         sprite_collided = collide_fn(group, dokill, collided)
@@ -87,7 +87,6 @@ class MovementComponent(object):
 
     def move_y_with_collision(self, collide_fn, group, dokill=None, collided=None):
         self.acceleration.y = self.constant_acceleration_delta.y
-        # self.apply_acceleration_y_using_pressed_keys()
         self.process_input_for_y()
 
         sprite_collided = collide_fn(group, dokill, collided)

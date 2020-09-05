@@ -4,7 +4,7 @@ sys.path.insert(-1, os.path.dirname(os.path.abspath(__file__)))
 
 from rotator2 import Rotator2
 from timer import Timer
-from utilities import XYGeometry, WHGeometry
+from utilities import XYTuple, WHTuple, NESWTuple
 import exceptions
 import widget
 from moving_collision_rect import MovingCollisionRect

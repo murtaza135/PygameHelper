@@ -1,4 +1,5 @@
 from collections import namedtuple
 
-XYGeometry = namedtuple("XYGeometry", ["x", "y"])
-WHGeometry = namedtuple("WHGeometry", ["width", "height"])
+XYTuple = namedtuple("XYTuple", ["x", "y"])
+WHTuple = namedtuple("WHTuple", ["width", "height"])
+NESWTuple = namedtuple("NESWTuple", ["north", "east", "south", "west"])

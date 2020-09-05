@@ -2,7 +2,7 @@ import pygame
 from pygame.math import Vector2
 from rotator2 import Rotator2
 from keybinder import Keybinder
-from utilities import WHGeometry
+from utilities import WHTuple
 
 
 class TileBasedMovementComponent(object):
@@ -13,7 +13,7 @@ class TileBasedMovementComponent(object):
         self.parent = parent
         self.rect = rect
         self.rect.x, self.rect.y = default_position[0]*tile_size, default_position[1]*tile_size
-        self.window_size = WHGeometry(*window_size)
+        self.window_size = WHTuple(*window_size)
 
         self.position = self.rect.copy()
         self.rotation = Rotator2(default_rotation)
