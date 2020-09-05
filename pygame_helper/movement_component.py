@@ -3,19 +3,20 @@ from pygame.math import Vector2
 from rotator2 import Rotator2
 from keybinder import Keybinder
 from utilities import WHTuple, XYTuple, NESWTuple
+from abc import ABC, abstractmethod
 
 
 # TODO stop x from stopping when collision occurs in y
 
-class MovementComponent(object):
+class MovementComponent(ABC):
 
     CHANGE_ACCELERATION = "change_acceleration"
     CHANGE_DIRECTION = "change_direction"
     
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
                 default_rotation=Rotator2.RIGHT, default_velocity=(0, 0), default_acceleration=(0, 0),
-                window_size=(800, 600), after_bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen=(True, True),
-                keybind_functions=("change_acceleration", "change_acceleration")):
+                window_size=(800, 600), after_bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen=(True, True)):
+                # keybind_functions=("change_acceleration", "change_acceleration")):
         self.parent = parent
         self.rect = rect
         self.rect.centerx, self.rect.centery = default_position[0], default_position[1]
@@ -33,7 +34,8 @@ class MovementComponent(object):
         ratios_made_negative_or_zero = [abs(ratio)*(-1) for ratio in after_bounce_velocity_ratios]
         self.after_bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
-        self.keybind_functions = XYTuple(*keybind_functions)
+        # self.keybind_functions = XYTuple(*keybind_functions)
+        self.default_acceleration = Vector2(default_acceleration)
 
     @property
     def keybinds(self):
@@ -65,12 +67,16 @@ class MovementComponent(object):
         self.set_new_position_y()
 
     def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collided=None):
+        self.acceleration.x = self.constant_acceleration_delta.x
+        self.acceleration.y = self.constant_acceleration_delta.y
+        self.process_input()
+
         self.move_x_with_collision(collide_fn_x, group, dokill, collided)
         self.move_y_with_collision(collide_fn_y, group, dokill, collided)
 
     def move_x_with_collision(self, collide_fn, group, dokill=None, collided=None):
-        self.acceleration.x = self.constant_acceleration_delta.x
-        self.process_input_for_x()
+        # self.acceleration.x = self.constant_acceleration_delta.x
+        # self.process_input_for_x()
 
         sprite_collided = collide_fn(group, dokill, collided)
         if sprite_collided is not None:
@@ -86,8 +92,8 @@ class MovementComponent(object):
         self.set_new_position_x()
 
     def move_y_with_collision(self, collide_fn, group, dokill=None, collided=None):
-        self.acceleration.y = self.constant_acceleration_delta.y
-        self.process_input_for_y()
+        # self.acceleration.y = self.constant_acceleration_delta.y
+        # self.process_input_for_y()
 
         sprite_collided = collide_fn(group, dokill, collided)
         if sprite_collided is not None:
@@ -103,51 +109,57 @@ class MovementComponent(object):
 
         self.set_new_position_y()
 
+    @abstractmethod
+    def process_input(self):
+        pass
+
+    @abstractmethod
     def process_input_for_x(self):
         if self.keybind_functions.x == MovementComponent.CHANGE_ACCELERATION:
             self.apply_acceleration_x_using_pressed_keys()
         elif self.keybind_functions.x == MovementComponent.CHANGE_DIRECTION:
             self.change_direction_x_using_pressed_keys()
 
+    @abstractmethod
     def process_input_for_y(self):
         if self.keybind_functions.y == MovementComponent.CHANGE_ACCELERATION:
             self.apply_acceleration_y_using_pressed_keys()
         elif self.keybind_functions.y == MovementComponent.CHANGE_DIRECTION:
             self.change_direction_y_using_pressed_keys()
 
-    def change_direction_x_using_pressed_keys(self):
-        pressed_keys = pygame.key.get_pressed()
+    # def change_direction_x_using_pressed_keys(self):
+    #     pressed_keys = pygame.key.get_pressed()
 
-        if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
-            self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x) * (-1)
-        elif self.keybinds.is_key_pressed_for_option("right", pressed_keys):
-            self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x)
-        self.acceleration.x = self.constant_acceleration_delta.x
+    #     if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
+    #         self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x) * (-1)
+    #     elif self.keybinds.is_key_pressed_for_option("right", pressed_keys):
+    #         self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x)
+    #     self.acceleration.x = self.constant_acceleration_delta.x
 
-    def change_direction_y_using_pressed_keys(self):
-        pressed_keys = pygame.key.get_pressed()
+    # def change_direction_y_using_pressed_keys(self):
+    #     pressed_keys = pygame.key.get_pressed()
 
-        if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
-            self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y) * (-1)
-        elif self.keybinds.is_key_pressed_for_option("down", pressed_keys):
-            self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y)
-        self.acceleration.y = self.constant_acceleration_delta.y
+    #     if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
+    #         self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y) * (-1)
+    #     elif self.keybinds.is_key_pressed_for_option("down", pressed_keys):
+    #         self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y)
+    #     self.acceleration.y = self.constant_acceleration_delta.y
 
-    def apply_acceleration_x_using_pressed_keys(self):
-        pressed_keys = pygame.key.get_pressed()
+    # def apply_acceleration_x_using_pressed_keys(self):
+    #     pressed_keys = pygame.key.get_pressed()
 
-        if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
-            self.acceleration.x -= self.keybinds.get_value_for_option("left")
-        if self.keybinds.is_key_pressed_for_option("right", pressed_keys):
-            self.acceleration.x += self.keybinds.get_value_for_option("right")
+    #     if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
+    #         self.acceleration.x -= self.keybinds.get_value_for_option("left")
+    #     if self.keybinds.is_key_pressed_for_option("right", pressed_keys):
+    #         self.acceleration.x += self.keybinds.get_value_for_option("right")
 
-    def apply_acceleration_y_using_pressed_keys(self):
-        pressed_keys = pygame.key.get_pressed()
+    # def apply_acceleration_y_using_pressed_keys(self):
+    #     pressed_keys = pygame.key.get_pressed()
 
-        if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
-            self.acceleration.y -= self.keybinds.get_value_for_option("up")
-        if self.keybinds.is_key_pressed_for_option("down", pressed_keys):
-            self.acceleration.y += self.keybinds.get_value_for_option("down")
+    #     if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
+    #         self.acceleration.y -= self.keybinds.get_value_for_option("up")
+    #     if self.keybinds.is_key_pressed_for_option("down", pressed_keys):
+    #         self.acceleration.y += self.keybinds.get_value_for_option("down")
 
     def set_new_position_x(self):
         self.position = self.position.move((self.velocity.x * self.tick) + (0.5 * self.acceleration.x * self.tick**2), 0)
@@ -173,6 +185,7 @@ class MovementComponent(object):
         elif self.position.centery < 0:
             self.position.centery = self.window_size.height
 
+    @abstractmethod
     def jump_if_key_pressed(self):
         if self.keybinds.is_key_pressed_for_option("jump"):
             self.velocity.y = -self.keybinds.get_value_for_option("jump")

@@ -10,5 +10,8 @@ import widget
 from moving_collision_rect import MovingCollisionRect
 from movement_component import MovementComponent
 from tile_based_movement_component import TileBasedMovementComponent
+from acceleration_movement_component import AccelerationMovementComponent
+from direction_movement_component import DirectionMovementComponent
+from movement_input import MovementInput
 from base_map import Map
 from keybinder import Keybinder
