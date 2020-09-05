@@ -4,8 +4,7 @@ from rotator2 import Rotator2
 from keybinder import Keybinder
 from utilities import WHTuple, XYTuple, NESWTuple
 
-# TODO add independance from framerate
-# TODO prevent extra speed when both x and y have acceleration
+
 # TODO stop x from stopping when collision occurs in y
 
 class MovementComponent(object):
