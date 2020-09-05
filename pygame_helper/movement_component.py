@@ -2,8 +2,7 @@ import pygame
 from pygame.math import Vector2
 from rotator2 import Rotator2
 from keybinder import Keybinder
-from utilities import WHTuple
-from utilities import XYTuple
+from utilities import WHTuple, XYTuple, NESWTuple
 
 # TODO add independance from framerate
 # TODO stop x from stopping when collision occurs in y
@@ -15,7 +14,7 @@ class MovementComponent(object):
     
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
                 default_rotation=Rotator2.RIGHT, default_velocity=(0, 0), default_acceleration=(0, 0),
-                window_size=(800, 600), after_bounce_velocity_ratio=0, should_wrap_screen_x=True,
+                window_size=(800, 600), after_bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen_x=True,
                 should_wrap_screen_y=True, keybind_function_x="change_acceleration",
                 keybind_function_y="change_acceleration"):
         self.parent = parent
@@ -32,11 +31,16 @@ class MovementComponent(object):
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
 
-        self.after_bounce_velocity_ratio = after_bounce_velocity_ratio
+        # self.after_bounce_velocity_ratio = after_bounce_velocity_ratio
         self.should_wrap_screen_x = should_wrap_screen_x
         self.should_wrap_screen_y = should_wrap_screen_y
         self.keybind_function_x = keybind_function_x
         self.keybind_function_y = keybind_function_y
+
+        ratios_made_negative_or_zero = [abs(ratio)*(-1) for ratio in after_bounce_velocity_ratios]
+        self.after_bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
+        # self.should_wrap_screen = XYTuple(*should_wrap_screen)
+        # self.keybind_functions = XYTuple(*keybind_functions)
 
     @property
     def keybinds(self):
@@ -78,7 +82,10 @@ class MovementComponent(object):
         sprite_collided = collide_fn(group, dokill, collided)
         if sprite_collided is not None:
             self.move_x_back_if_collided(sprite_collided)
-            self.velocity.x = 0
+            if sprite_collided["side"] == "right":
+                self.velocity.x *= self.after_bounce_velocity_ratios.east
+            elif sprite_collided["side"] == "left":
+                self.velocity.x *= self.after_bounce_velocity_ratios.west
         else:
             self.acceleration.x += self.velocity.x * self.friction.x
             self.velocity.x += self.acceleration.x
@@ -93,9 +100,9 @@ class MovementComponent(object):
         if sprite_collided is not None:
             self.move_y_back_if_collided(sprite_collided)
             if sprite_collided["side"] == "top":
-                self.velocity.y *= self.after_bounce_velocity_ratio
+                self.velocity.y *= self.after_bounce_velocity_ratios.north
             elif sprite_collided["side"] == "bottom":
-                self.velocity.y = 0
+                self.velocity.y *= self.after_bounce_velocity_ratios.south
                 self.jump_if_key_pressed()
         else:
             self.acceleration.y += self.velocity.y * self.friction.y
