@@ -3,8 +3,12 @@ from pygame.math import Vector2
 from rotator2 import Rotator2
 from keybinder import Keybinder
 from utilities import WHTuple, XYTuple, NESWTuple
-from vector_rect import VectorRect
+from positional_rect import PositionalRect
 
+
+# TODO add rotational movement
+# TODO clean up code and separate into classes
+# TODO add ability to jump from all 4 sides
 
 class MovementComponent(object):
 
@@ -20,7 +24,7 @@ class MovementComponent(object):
         self.rect.centerx, self.rect.centery = default_position[0], default_position[1]
         self.window_size = WHTuple(*window_size)
 
-        self.position = VectorRect(self.rect)
+        self.position = PositionalRect(self.rect)
         self.rotation = Rotator2(default_rotation)
         self.velocity = Vector2(default_velocity)
         self.acceleration = Vector2()
@@ -36,6 +40,9 @@ class MovementComponent(object):
 
         self.should_use_8_way_movement = should_use_8_way_movement
         self.movement_type = XYTuple(*movement_type)
+
+        # self.movement_type = (4_way, 8_way, rotation)
+        # self.direction_control = (direction_only, direction_and_magnitude)
 
     @property
     def keybinds(self):
@@ -146,7 +153,7 @@ class MovementComponent(object):
         pressed_keys = pygame.key.get_pressed()
 
         if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
-            self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x) * (-1)
+            self.constant_acceleration_delta.x = -abs(self.constant_acceleration_delta.x)
         elif self.keybinds.is_key_pressed_for_option("right", pressed_keys):
             self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x)
         self.acceleration.x = self.constant_acceleration_delta.x
@@ -163,7 +170,7 @@ class MovementComponent(object):
         pressed_keys = pygame.key.get_pressed()
 
         if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
-            self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y) * (-1)
+            self.constant_acceleration_delta.y = -abs(self.constant_acceleration_delta.y)
         elif self.keybinds.is_key_pressed_for_option("down", pressed_keys):
             self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y)
         self.acceleration.y = self.constant_acceleration_delta.y

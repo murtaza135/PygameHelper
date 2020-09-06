@@ -4,35 +4,10 @@ from utilities import WHTuple
 from multipledispatch import dispatch
 
 
-class VectorRect(Vector2):
-
-    @dispatch()
-    def __init__(self):
-        # super().__init__()
-        self._x = float(0)
-        self._y = float(0)
-        self._width = int(0)
-        self._height = int(0)
-
-    @dispatch(Vector2, object, object)
-    def __init__(self, vector, width, height):
-        # super().__init__(vector)
-        self._x = float(vector.x)
-        self._y = float(vector.y)
-        self._width = int(width)
-        self._height = int(height)
-
-    @dispatch(Vector2, object)
-    def __init__(self, vector, geometry):
-        # super().__init__(vector)
-        self._x = float(vector.y)
-        self._y = float(vector.y)
-        self._width = int(geometry[0])
-        self._height = int(geometry[1])
+class PositionalRect(pygame.Rect):
 
     @dispatch(object, object, object, object)
     def __init__(self, x, y, width, height):
-        # super().__init__(x, y)
         self._x = float(x)
         self._y = float(y)
         self._width = int(width)
@@ -40,7 +15,6 @@ class VectorRect(Vector2):
 
     @dispatch(object, object)
     def __init__(self, coords, geometry):
-        # super().__init__(coords)
         self._x = float(coords[0])
         self._y = float(coords[1])
         self._width = int(geometry[0])
@@ -48,7 +22,6 @@ class VectorRect(Vector2):
 
     @dispatch(pygame.Rect)
     def __init__(self, rect):
-        # super().__init__(rect.x, rect.y)
         self._x = float(rect.x)
         self._y = float(rect.y)
         self._width = int(rect.width)
@@ -251,4 +224,4 @@ class VectorRect(Vector2):
         return f"{self.__class__.__name__}(x={self.x}, y={self.y}, width={self.width}, height={self.height})"
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.x}, {self.y}, {self.width}, {self.height})"
+        return f"{self.__class__.__name__}(({self.x}, {self.y}), ({self.width}, {self.height}))"
