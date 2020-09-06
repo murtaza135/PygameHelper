@@ -14,11 +14,18 @@ class MovementComponent(object):
 
     ACCELERATION = "acceleration"
     DIRECTION = "direction"
+
+    FOUR_WAY_MOVEMENT = "four_way_movement"
+    EIGHT_WAY_MOVEMENT = "eight_way_movement"
+    ROTATIONAL_MOVEMENT = "rotational_movement"
+
+    DIRECTION_ONLY = "direction_only"
+    DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
     
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
                 default_rotation=Rotator2.RIGHT, default_velocity=(0, 0),
                 window_size=(800, 600), bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen=(True, True),
-                should_use_8_way_movement=True, movement_type=("acceleration", "acceleration")):
+                movement_type="eight_way_movement", direction_control=("direction_and_magnitude", "direction_and_magnitude")):
         self.parent = parent
         self.rect = rect
         self.rect.centerx, self.rect.centery = default_position[0], default_position[1]
@@ -38,8 +45,8 @@ class MovementComponent(object):
         self.bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
-        self.should_use_8_way_movement = should_use_8_way_movement
-        self.movement_type = XYTuple(*movement_type)
+        self.movement_type = movement_type
+        self.direction_control = XYTuple(*direction_control)
 
         # self.movement_type = (4_way, 8_way, rotation)
         # self.direction_control = (direction_only, direction_and_magnitude)
@@ -89,20 +96,22 @@ class MovementComponent(object):
 
 
     def _process_input(self):
-        if not self.should_use_8_way_movement:
-            if self.movement_type.x == MovementComponent.ACCELERATION:
+        if self.movement_type == MovementComponent.ROTATIONAL_MOVEMENT:
+            pass
+        elif self.movement_type == MovementComponent.FOUR_WAY_MOVEMENT:
+            if self.direction_control.x == MovementComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_acceleration_in_one_direction_only()
-            elif self.movement_type.x == MovementComponent.DIRECTION:
+            elif self.direction_control.x == MovementComponent.DIRECTION_ONLY:
                 self._change_absolute_direction()
-        else:
-            if self.movement_type.x == MovementComponent.ACCELERATION:
+        elif self.movement_type == MovementComponent.EIGHT_WAY_MOVEMENT:
+            if self.direction_control.x == MovementComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_acceleration_x()
-            elif self.movement_type.x == MovementComponent.DIRECTION:
+            elif self.direction_control.x == MovementComponent.DIRECTION_ONLY:
                 self._change_direction_x()
 
-            if self.movement_type.y == MovementComponent.ACCELERATION:
+            if self.direction_control.y == MovementComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_acceleration_y()
-            elif self.movement_type.y == MovementComponent.DIRECTION:
+            elif self.direction_control.y == MovementComponent.DIRECTION_ONLY:
                 self._change_direction_y()
 
     def _apply_acceleration_in_one_direction_only(self):
