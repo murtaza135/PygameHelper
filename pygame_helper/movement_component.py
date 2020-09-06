@@ -4,6 +4,7 @@ from rotator2 import Rotator2
 from keybinder import Keybinder
 from utilities import WHTuple, XYTuple, NESWTuple
 from abc import ABC, abstractmethod
+from vector_rect import VectorRect
 
 
 # TODO stop x from stopping when collision occurs in y
@@ -25,7 +26,8 @@ class MovementComponent(object):
         self.rect.centerx, self.rect.centery = default_position[0], default_position[1]
         self.window_size = WHTuple(*window_size)
 
-        self.position = self.rect.copy()
+        # self.position = self.rect.copy()
+        self.position = VectorRect(self.rect)
         self.rotation = Rotator2(default_rotation)
         self.velocity = Vector2(default_velocity)
         self.acceleration = Vector2(default_acceleration)
@@ -255,13 +257,15 @@ class MovementComponent(object):
     #         self.acceleration.y += self.keybinds.get_value_for_option("down")
 
     def set_new_position_x(self):
-        self.position = self.position.move((self.velocity.x * self.tick) + (0.5 * self.acceleration.x * self.tick**2), 0)
+        # self.position = self.position.move((self.velocity.x * self.tick) + (0.5 * self.acceleration.x * self.tick**2), 0)
+        self.position.x += (self.velocity.x * self.tick) + (0.5 * self.acceleration.x * self.tick**2)
         if self.should_wrap_screen.x:
             self.wrap_around_screen_x()
         self.rect.x = self.position.x
 
     def set_new_position_y(self):
-        self.position = self.position.move(0, (self.velocity.y * self.tick) + (0.5 * self.acceleration.y * self.tick**2))
+        # self.position = self.position.move(0, (self.velocity.y * self.tick) + (0.5 * self.acceleration.y * self.tick**2))
+        self.position.y += (self.velocity.y * self.tick) + (0.5 * self.acceleration.y * self.tick**2)
         if self.should_wrap_screen.y:
             self.wrap_around_screen_y()
         self.rect.y = self.position.y
