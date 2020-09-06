@@ -47,8 +47,12 @@ class Keybinder(dict):
 
         self[option_name]["value"] = value
 
-    def track_key(self, key):
-        self.tracked_keys.append(key)
+    def track_keys_for_option(self, option_name):
+        if option_name not in self:
+            raise KeyError(f"'{option_name}' is not in keybinder")
+
+        for key in self[option_name]["keybinds"]:
+            self.tracked_keys.append(key)
 
 
     def reset(self):

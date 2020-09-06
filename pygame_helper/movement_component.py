@@ -8,14 +8,17 @@ from abc import ABC, abstractmethod
 
 # TODO stop x from stopping when collision occurs in y
 
-class MovementComponent(ABC):
+class MovementComponent(object):
 
     CHANGE_ACCELERATION = "change_acceleration"
     CHANGE_DIRECTION = "change_direction"
+    ACCELERATION = "acceleration"
+    DIRECTION = "direction"
     
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
                 default_rotation=Rotator2.RIGHT, default_velocity=(0, 0), default_acceleration=(0, 0),
-                window_size=(800, 600), after_bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen=(True, True)):
+                window_size=(800, 600), after_bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen=(True, True),
+                should_use_8_way_movement=True, movement_type=("acceleration", "acceleration")):
                 # keybind_functions=("change_acceleration", "change_acceleration")):
         self.parent = parent
         self.rect = rect
@@ -37,6 +40,9 @@ class MovementComponent(ABC):
         # self.keybind_functions = XYTuple(*keybind_functions)
         self.default_acceleration = Vector2(default_acceleration)
 
+        self.should_use_8_way_movement = should_use_8_way_movement
+        self.movement_type = XYTuple(*movement_type)
+
     @property
     def keybinds(self):
         return self._keybinds
@@ -53,6 +59,7 @@ class MovementComponent(ABC):
         self.move_y_without_collision()
 
     def move_x_without_collision(self):
+        # TODO update
         self.acceleration.x = self.constant_acceleration_delta.x
         self.apply_acceleration_x_using_pressed_keys()
         self.acceleration.x += self.velocity.x * self.friction.x
@@ -60,6 +67,7 @@ class MovementComponent(ABC):
         self.set_new_position_x()
 
     def move_y_without_collision(self):
+        # TODO update
         self.acceleration.y = self.constant_acceleration_delta.y
         self.apply_acceleration_y_using_pressed_keys()
         self.acceleration.y += self.velocity.y * self.friction.y
@@ -109,23 +117,108 @@ class MovementComponent(ABC):
 
         self.set_new_position_y()
 
-    @abstractmethod
+    # @abstractmethod
     def process_input(self):
-        pass
+        if not self.should_use_8_way_movement:
+            if self.movement_type.x == MovementComponent.ACCELERATION:
+                self.apply_acceleration_in_one_direction_only()
+            elif self.movement_type.x == MovementComponent.DIRECTION:
+                self.change_absolute_direction()
+        else:
+            if self.movement_type.x == MovementComponent.ACCELERATION:
+                self.apply_acceleration_x()
+            elif self.movement_type.x == MovementComponent.DIRECTION:
+                self.change_direction_x()
 
-    @abstractmethod
-    def process_input_for_x(self):
-        if self.keybind_functions.x == MovementComponent.CHANGE_ACCELERATION:
-            self.apply_acceleration_x_using_pressed_keys()
-        elif self.keybind_functions.x == MovementComponent.CHANGE_DIRECTION:
-            self.change_direction_x_using_pressed_keys()
+            if self.movement_type.y == MovementComponent.ACCELERATION:
+                self.apply_acceleration_y()
+            elif self.movement_type.y == MovementComponent.DIRECTION:
+                self.change_direction_y()
 
-    @abstractmethod
-    def process_input_for_y(self):
-        if self.keybind_functions.y == MovementComponent.CHANGE_ACCELERATION:
-            self.apply_acceleration_y_using_pressed_keys()
-        elif self.keybind_functions.y == MovementComponent.CHANGE_DIRECTION:
-            self.change_direction_y_using_pressed_keys()
+    def apply_acceleration_in_one_direction_only(self):
+        self.keybinds.update_pressed_keys_order()
+
+        if self.keybinds.is_key_most_recently_pressed_for_option("left"):
+            self.acceleration.x -= self.keybinds.get_value_for_option("left")
+            self.velocity.y = 0
+        if self.keybinds.is_key_most_recently_pressed_for_option("right"):
+            self.acceleration.x += self.keybinds.get_value_for_option("right")
+            self.velocity.y = 0
+        if self.keybinds.is_key_most_recently_pressed_for_option("up"):
+            self.acceleration.y -= self.keybinds.get_value_for_option("up")
+            self.velocity.x = 0
+        if self.keybinds.is_key_most_recently_pressed_for_option("down"):
+            self.acceleration.y += self.keybinds.get_value_for_option("down")
+            self.velocity.x = 0
+
+    def change_absolute_direction(self):
+        pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
+            self.constant_acceleration_delta.x = -abs(self.default_acceleration.x)
+            self.constant_acceleration_delta.y = 0
+            self.velocity.y = 0
+        elif self.keybinds.is_key_pressed_for_option("right", pressed_keys):
+            self.constant_acceleration_delta.x = abs(self.default_acceleration.x)
+            self.constant_acceleration_delta.y = 0
+            self.velocity.y = 0
+        elif self.keybinds.is_key_pressed_for_option("up", pressed_keys):
+            self.constant_acceleration_delta.y = -abs(self.default_acceleration.y)
+            self.constant_acceleration_delta.x = 0
+            self.velocity.x = 0
+        elif self.keybinds.is_key_pressed_for_option("down", pressed_keys):
+            self.constant_acceleration_delta.y = abs(self.default_acceleration.y)
+            self.constant_acceleration_delta.x = 0
+            self.velocity.x = 0
+
+    def apply_acceleration_x(self):
+        pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
+            self.acceleration.x -= self.keybinds.get_value_for_option("left")
+        if self.keybinds.is_key_pressed_for_option("right", pressed_keys):
+            self.acceleration.x += self.keybinds.get_value_for_option("right")
+
+    def change_direction_x(self):
+        pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("left", pressed_keys):
+            self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x) * (-1)
+        elif self.keybinds.is_key_pressed_for_option("right", pressed_keys):
+            self.constant_acceleration_delta.x = abs(self.constant_acceleration_delta.x)
+        self.acceleration.x = self.constant_acceleration_delta.x
+
+    def apply_acceleration_y(self):
+        pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
+            self.acceleration.y -= self.keybinds.get_value_for_option("up")
+        if self.keybinds.is_key_pressed_for_option("down", pressed_keys):
+            self.acceleration.y += self.keybinds.get_value_for_option("down")
+
+    def change_direction_y(self):
+        pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("up", pressed_keys):
+            self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y) * (-1)
+        elif self.keybinds.is_key_pressed_for_option("down", pressed_keys):
+            self.constant_acceleration_delta.y = abs(self.constant_acceleration_delta.y)
+        self.acceleration.y = self.constant_acceleration_delta.y
+
+
+    # @abstractmethod
+    # def process_input_for_x(self):
+    #     if self.keybind_functions.x == MovementComponent.CHANGE_ACCELERATION:
+    #         self.apply_acceleration_x_using_pressed_keys()
+    #     elif self.keybind_functions.x == MovementComponent.CHANGE_DIRECTION:
+    #         self.change_direction_x_using_pressed_keys()
+
+    # @abstractmethod
+    # def process_input_for_y(self):
+    #     if self.keybind_functions.y == MovementComponent.CHANGE_ACCELERATION:
+    #         self.apply_acceleration_y_using_pressed_keys()
+    #     elif self.keybind_functions.y == MovementComponent.CHANGE_DIRECTION:
+    #         self.change_direction_y_using_pressed_keys()
 
     # def change_direction_x_using_pressed_keys(self):
     #     pressed_keys = pygame.key.get_pressed()
@@ -185,7 +278,7 @@ class MovementComponent(ABC):
         elif self.position.centery < 0:
             self.position.centery = self.window_size.height
 
-    @abstractmethod
+    # @abstractmethod
     def jump_if_key_pressed(self):
         if self.keybinds.is_key_pressed_for_option("jump"):
             self.velocity.y = -self.keybinds.get_value_for_option("jump")
