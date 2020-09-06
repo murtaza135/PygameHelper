@@ -355,6 +355,10 @@ class MovementComponent(object):
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collided)
             self.rect.y += 1
 
+            print("rect:", self.rect.topleft)
+            print("position:", self.position.topleft)
+            print("collided:", sprites_collided)
+
             for sprite in sprites_collided:
                 if abs(self.position.top - sprite.rect.bottom) < self.collision_tolerance_y:
                     return {"sprite": sprite, "side": "top"}
@@ -362,11 +366,11 @@ class MovementComponent(object):
 
     @property
     def collision_tolerance_x(self):
-        return abs(self.velocity.x + (0.5 * self.acceleration.x)) * 2
+        return abs((self.velocity.x * self.tick) + (0.5 * self.acceleration.x * self.tick**2)) * 2
 
     @property
     def collision_tolerance_y(self):
-        return abs(self.velocity.y + (0.5 * self.acceleration.y)) * 2
+        return abs((self.velocity.y * self.tick) + (0.5 * self.acceleration.y * self.tick**2)) * 2
 
     def spritecollide(self, group):
         return [sprite for sprite in group if self.position.colliderect(sprite.rect)]
