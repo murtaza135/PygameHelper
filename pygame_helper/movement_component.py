@@ -9,6 +9,9 @@ from positional_rect import PositionalRect
 # TODO add rotational movement
 # TODO clean up code and separate into classes
 # TODO add ability to jump from all 4 sides
+# TODO make attributes private, and set saved_acceleration_delta when constant_acceleration_delta is set
+# TODO stop movement going faster than what it should be when both x and y movement is occuring
+
 
 class MovementComponent(object):
 
@@ -23,7 +26,7 @@ class MovementComponent(object):
     DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
     
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
-                default_rotation=Rotator2.RIGHT, default_velocity=(0, 0),
+                default_velocity=(0, 0), default_rotation=Rotator2.RIGHT,
                 window_size=(800, 600), bounce_velocity_ratios=(0, 0, 0, 0), should_wrap_screen=(True, True),
                 movement_type="eight_way_movement", direction_control=("direction_and_magnitude", "direction_and_magnitude")):
         self.parent = parent
@@ -32,12 +35,12 @@ class MovementComponent(object):
         self.window_size = WHTuple(*window_size)
 
         self.position = PositionalRect(self.rect)
-        self.rotation = Rotator2(default_rotation)
         self.velocity = Vector2(default_velocity)
         self.acceleration = Vector2()
         self.friction = Vector2(friction)
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
         self.saved_acceleration_delta = Vector2(constant_acceleration_delta)
+        self.rotation = Rotator2(default_rotation)
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
 
@@ -47,9 +50,6 @@ class MovementComponent(object):
 
         self.movement_type = movement_type
         self.direction_control = XYTuple(*direction_control)
-
-        # self.movement_type = (4_way, 8_way, rotation)
-        # self.direction_control = (direction_only, direction_and_magnitude)
 
     @property
     def keybinds(self):
@@ -97,7 +97,7 @@ class MovementComponent(object):
 
     def _process_input(self):
         if self.movement_type == MovementComponent.ROTATIONAL_MOVEMENT:
-            pass
+            self._apply_rotation()
         elif self.movement_type == MovementComponent.FOUR_WAY_MOVEMENT:
             if self.direction_control.x == MovementComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_acceleration_in_one_direction_only()
@@ -113,6 +113,24 @@ class MovementComponent(object):
                 self._apply_acceleration_y()
             elif self.direction_control.y == MovementComponent.DIRECTION_ONLY:
                 self._change_direction_y()
+
+    def _apply_rotation(self):
+        # pressed_keys = pygame.key.get_pressed()
+
+        if self.keybinds.is_key_pressed_for_option("left"):
+            self.rotation.rotator -= self.keybinds.get_value_for_option("left") * self.tick
+        if self.keybinds.is_key_pressed_for_option("right"):
+            self.rotation.rotator += self.keybinds.get_value_for_option("right") * self.tick
+        if self.keybinds.is_key_pressed_for_option("up"):
+            self.acceleration.x += self.keybinds.get_value_for_option("up")
+            self.acceleration = self.acceleration.rotate(self.rotation.rotator)
+        if self.keybinds.is_key_pressed_for_option("down"):
+            self.acceleration.x -= self.keybinds.get_value_for_option("down")
+            self.acceleration = self.acceleration.rotate(self.rotation.rotator)
+
+        # print(self.acceleration)
+        # print(self.rotation)
+            
 
     def _apply_acceleration_in_one_direction_only(self):
         self.keybinds.update_pressed_keys_order()
