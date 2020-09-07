@@ -7,5 +7,5 @@ from movement_component import MovementComponent
 from utilities import WHTuple, XYTuple, NESWTuple
 
 
-class TileBasedMovementComponent(MovementComponent):
+class VelocityMovementComponent(MovementComponent):
     pass

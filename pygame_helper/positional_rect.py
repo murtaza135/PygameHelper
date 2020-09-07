@@ -1,7 +1,7 @@
 import pygame
 from pygame.math import Vector2
-from utilities import WHTuple
 from multipledispatch import dispatch
+from utilities import WHTuple
 
 
 class PositionalRect(object):
