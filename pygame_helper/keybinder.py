@@ -92,11 +92,11 @@ class Keybinder(dict):
             pass
 
         
-    def is_key_pressed_for_option(self, option_name, keys_pressed=None):
+    def is_key_pressed_for_option(self, option_name):
         if option_name not in self:
             raise KeyError(f"'{option_name}' is not in keybinder")
 
-        keys_pressed = pygame.key.get_pressed() if keys_pressed == None else keys_pressed
+        keys_pressed = pygame.key.get_pressed()
         for key in self[option_name]["keybinds"]:
             if keys_pressed[key]:
                 return True
