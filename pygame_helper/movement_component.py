@@ -70,26 +70,32 @@ class MovementComponent(object):
         self._set_new_physics_state_and_transform_x()
         self._set_new_physics_state_and_transform_y()
 
-    def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collided=None):
+    def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collide_callback=None):
         self.acceleration.x = self.constant_acceleration_delta.x
         self.acceleration.y = self.constant_acceleration_delta.y
         self._process_input()
 
-        self._move_x_with_collision(collide_fn_x, group, dokill, collided)
-        self._move_y_with_collision(collide_fn_y, group, dokill, collided)
+        self._move_x_with_collision(collide_fn_x, group, dokill, collide_callback)
+        self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
 
-    def _move_x_with_collision(self, collide_fn, group, dokill=None, collided=None):
+    def _move_x_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
         self._set_new_physics_state_and_transform_x()
 
-        sprite_collided = collide_fn(group, dokill, collided)
+        sprite_collided = None
+        if collide_fn is not None:
+            sprite_collided = collide_fn(group, dokill, collide_callback)
+
         if sprite_collided is not None:
             self._move_x_back_if_collided(sprite_collided)
             self._apply_bounce_or_jump_x(sprite_collided)
 
-    def _move_y_with_collision(self, collide_fn, group, dokill=None, collided=None):
+    def _move_y_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
         self._set_new_physics_state_and_transform_y()
 
-        sprite_collided = collide_fn(group, dokill, collided)
+        sprite_collided = None
+        if collide_fn is not None:
+            sprite_collided = collide_fn(group, dokill, collide_callback)
+
         if sprite_collided is not None:
             self._move_y_back_if_collided(sprite_collided)
             self._apply_bounce_or_jump_y(sprite_collided)
@@ -127,6 +133,12 @@ class MovementComponent(object):
         if self.keybinds.is_key_pressed_for_option("down"):
             self.acceleration.x -= self.keybinds.get_value_for_option("down")
             self.acceleration = self.acceleration.rotate(self.rotation.rotator)
+
+        self.parent.image = pygame.transform.rotate(self.parent.original_image, -self.rotation.rotator)
+        self.parent.rect = self.parent.image.get_rect()
+        self.rect = self.parent.rect
+        self.rect.centerx, self.rect.centery = self.position.centerx, self.position.centery
+
 
         # print(self.acceleration)
         # print(self.rotation)
@@ -213,7 +225,7 @@ class MovementComponent(object):
         self.position.x += (self.velocity.x * self.tick) + (0.5 * self.acceleration.x * self.tick**2)
         if self.should_wrap_screen.x:
             self._wrap_around_screen_x()
-        self.rect.x = self.position.x
+        self.rect.centerx = self.position.centerx
 
     def _set_new_physics_state_and_transform_y(self):
         self.acceleration.y += self.velocity.y * self.friction.y
@@ -221,7 +233,7 @@ class MovementComponent(object):
         self.position.y += (self.velocity.y * self.tick) + (0.5 * self.acceleration.y * self.tick**2)
         if self.should_wrap_screen.y:
             self._wrap_around_screen_y()
-        self.rect.y = self.position.y
+        self.rect.centery = self.position.centery
 
     def _wrap_around_screen_x(self):
         if self.position.centerx > self.window_size.width:
@@ -241,7 +253,7 @@ class MovementComponent(object):
                 self.position.right = sprite_collided["sprite"].rect.left
             if sprite_collided["side"] == "left":
                 self.position.left = sprite_collided["sprite"].rect.right
-            self.rect.x = self.position.x
+            self.rect.centerx = self.position.centerx
 
     def _move_y_back_if_collided(self, sprite_collided):
         if sprite_collided is not None:
@@ -249,7 +261,7 @@ class MovementComponent(object):
                 self.position.bottom = sprite_collided["sprite"].rect.top
             if sprite_collided["side"] == "top":
                 self.position.top = sprite_collided["sprite"].rect.bottom
-            self.rect.y = self.position.y
+            self.rect.centery = self.position.centery
 
     def _apply_bounce_or_jump_x(self, sprite_collided):
         if sprite_collided["side"] == "right":
@@ -265,47 +277,63 @@ class MovementComponent(object):
             self._jump_if_key_pressed()
 
 
-    def get_x_collision(self, group, dokill=False, collided=None):
-        sprite_collided = self.get_collision_right(group, dokill, collided)
+    def get_x_collision(self, group, dokill=False, collide_callback=None):
+        sprite_collided = self.get_collision_right(group, dokill, collide_callback)
         if sprite_collided is not None:
             return sprite_collided
         else:
-            return self.get_collision_left(group, dokill, collided)
+            return self.get_collision_left(group, dokill, collide_callback)
 
-    def get_collision_right(self, group, dokill=False, collided=None):
+    def get_collision_right(self, group, dokill=False, collide_callback=None):
+        if collide_callback == None:
+            collide_callback = MovementComponent.collide_positionalrect
+
         if self.velocity.x > 0 or (self.velocity.x == 0 and self.acceleration.x > 0):
-            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collided)
+            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "right"}
         return None
 
-    def get_collision_left(self, group, dokill=False, collided=None):
+    def get_collision_left(self, group, dokill=False, collide_callback=None):
+        if collide_callback == None:
+            collide_callback = MovementComponent.collide_positionalrect
+
         if self.velocity.x < 0 or (self.velocity.x == 0 and self.acceleration.x < 0):
-            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collided)
+            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "left"}
         return None
         
-    def get_y_collision(self, group, dokill=False, collided=None):
-        sprite_collided = self.get_collision_bottom(group, dokill, collided)
+    def get_y_collision(self, group, dokill=False, collide_callback=None):
+        sprite_collided = self.get_collision_bottom(group, dokill, collide_callback)
         if sprite_collided is not None:
             return sprite_collided
         else:
-            return self.get_collision_top(group, dokill, collided)
+            return self.get_collision_top(group, dokill, collide_callback)
 
-    def get_collision_bottom(self, group, dokill=False, collided=None):
+    def get_collision_bottom(self, group, dokill=False, collide_callback=None):
+        if collide_callback == None:
+            collide_callback = MovementComponent.collide_positionalrect
+
         if self.velocity.y > 0 or (self.velocity.y == 0 and self.acceleration.y > 0):
-            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collided)
+            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "bottom"}
         return None
 
-    def get_collision_top(self, group, dokill=False, collided=None):
+    def get_collision_top(self, group, dokill=False, collide_callback=None):
+        if collide_callback == None:
+            collide_callback = MovementComponent.collide_positionalrect
+
         if self.velocity.y < 0 or (self.velocity.y == 0 and self.acceleration.y < 0):
-            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collided)
+            sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "top"}
         return None
 
     def spritecollide(self, group):
         return [sprite for sprite in group if self.position.colliderect(sprite.rect)]
+
+    @staticmethod
+    def collide_positionalrect(sprite_one, sprite_two):
+        return sprite_one.movement.position.rect.colliderect(sprite_two.rect)

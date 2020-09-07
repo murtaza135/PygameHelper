@@ -4,7 +4,7 @@ from utilities import WHTuple
 from multipledispatch import dispatch
 
 
-class PositionalRect(pygame.Rect):
+class PositionalRect(object):
 
     @dispatch(object, object, object, object)
     def __init__(self, x, y, width, height):
@@ -26,6 +26,11 @@ class PositionalRect(pygame.Rect):
         self._y = float(rect.y)
         self._width = int(rect.width)
         self._height = int(rect.height)
+
+    
+    @property
+    def rect(self):
+        return pygame.Rect(self.x, self.y, self.width, self.height)
 
 
     @property
