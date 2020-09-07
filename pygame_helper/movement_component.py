@@ -7,7 +7,7 @@ from positional_rect import PositionalRect
 
 
 # TODO clean up code and separate into classes, make better names
-# TODO make attributes private, and set saved_acceleration_delta when constant_acceleration_delta is set, and ability to change certain attributes only
+# TODO make attributes private, and ability to change certain attributes only
 # TODO stop movement going faster than what it should be when both x and y movement is occuring
 # TODO add ability to jump from all 4 sides
 
@@ -24,8 +24,8 @@ class MovementComponent(object):
     DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
     
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0), 
-                default_velocity=(0, 0), default_rotation=0, window_size=(800, 600), should_wrap_screen=(True, True),
-                bounce_velocity_ratios=(0, 0, 0, 0), movement_type="eight_way_movement",
+                default_velocity=(0, 0), default_acceleration_delta=(0, 0), default_rotation=0, window_size=(800, 600),
+                should_wrap_screen=(True, True), bounce_velocity_ratios=(0, 0, 0, 0), movement_type="eight_way_movement",
                 direction_control=("direction_and_magnitude", "direction_and_magnitude")):
         self.parent = parent
         self.rect = rect
@@ -37,7 +37,7 @@ class MovementComponent(object):
         self.acceleration = Vector2()
         self.friction = Vector2(friction)
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
-        self.saved_acceleration_delta = Vector2(constant_acceleration_delta)
+        self.default_acceleration_delta = Vector2(default_acceleration_delta)
         self.rotation = Rotator2(default_rotation)
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
@@ -61,18 +61,14 @@ class MovementComponent(object):
 
 
     def move(self):
-        self.acceleration.x = self.constant_acceleration_delta.x
-        self.acceleration.y = self.constant_acceleration_delta.y
-        self._process_input()
-
+        self._reset_acceleration()
+        self._process_movement_input()
         self._set_new_physics_state_and_transform_x()
         self._set_new_physics_state_and_transform_y()
 
     def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collide_callback=None):
-        self.acceleration.x = self.constant_acceleration_delta.x
-        self.acceleration.y = self.constant_acceleration_delta.y
-        self._process_input()
-
+        self._reset_acceleration()
+        self._process_movement_input()
         self._move_x_with_collision(collide_fn_x, group, dokill, collide_callback)
         self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
 
@@ -99,7 +95,7 @@ class MovementComponent(object):
             self._apply_bounce_or_jump_y(sprite_collided)
 
 
-    def _process_input(self):
+    def _process_movement_input(self):
         if self.movement_type == MovementComponent.ROTATIONAL_MOVEMENT:
             if self.direction_control.x == MovementComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_rotation_and_acceleration()
@@ -167,21 +163,24 @@ class MovementComponent(object):
 
     def _change_absolute_direction(self):
         if self.keybinds.is_key_pressed_for_option("left"):
-            self.constant_acceleration_delta.x = -abs(self.saved_acceleration_delta.x)
+            self.constant_acceleration_delta.x = -abs(self.default_acceleration_delta.x)
             self.constant_acceleration_delta.y = 0
             self.velocity.y = 0
         elif self.keybinds.is_key_pressed_for_option("right"):
-            self.constant_acceleration_delta.x = abs(self.saved_acceleration_delta.x)
+            self.constant_acceleration_delta.x = abs(self.default_acceleration_delta.x)
             self.constant_acceleration_delta.y = 0
             self.velocity.y = 0
         elif self.keybinds.is_key_pressed_for_option("up"):
-            self.constant_acceleration_delta.y = -abs(self.saved_acceleration_delta.y)
             self.constant_acceleration_delta.x = 0
+            self.constant_acceleration_delta.y = -abs(self.default_acceleration_delta.y)
             self.velocity.x = 0
         elif self.keybinds.is_key_pressed_for_option("down"):
-            self.constant_acceleration_delta.y = abs(self.saved_acceleration_delta.y)
             self.constant_acceleration_delta.x = 0
+            self.constant_acceleration_delta.y = abs(self.default_acceleration_delta.y)
             self.velocity.x = 0
+        
+        self.acceleration.x = self.constant_acceleration_delta.x
+        self.acceleration.y = self.constant_acceleration_delta.y
 
     def _apply_acceleration_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
@@ -214,6 +213,10 @@ class MovementComponent(object):
             self.velocity.y = -abs(self.keybinds.get_value_for_option("jump"))
 
     
+    def _reset_acceleration(self):
+        self.acceleration.x = self.constant_acceleration_delta.x
+        self.acceleration.y = self.constant_acceleration_delta.y
+
     def _set_new_physics_state_and_transform_x(self):
         self.acceleration.x += self.velocity.x * self.friction.x
         self.velocity.x += self.acceleration.x * self.frametime
