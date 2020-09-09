@@ -5,8 +5,8 @@ class Keybinder(dict):
 
     def __init__(self, *args):
         super().__init__()
+        self.tracked_keys = set()
         self.pressed_keys_order = list()
-        self.tracked_keys = list()
 
         for arg in args:
             self.add_new_option(arg)
@@ -20,8 +20,7 @@ class Keybinder(dict):
             self.add_keybinds_and_value_to_option(*arg)
 
     def add_keybinds_and_value_to_option(self, option_name, keys, value):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
+        self._raise_key_error_if_option_name_invalid(option_name)
         if isinstance(keys, str):
             raise TypeError("'keys' must be an iterable, not a string")
 
@@ -29,30 +28,26 @@ class Keybinder(dict):
         self.assign_value_to_option(option_name, value)
 
     def add_multiple_keybinds_to_option(self, option_name, keys):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
-
+        self._raise_key_error_if_option_name_invalid(option_name)
         for key in keys:
             self.add_keybind_to_option(option_name, key)
 
     def add_keybind_to_option(self, option_name, key):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
-
+        self._raise_key_error_if_option_name_invalid(option_name)
         self[option_name]["keybinds"].add(key)
 
     def assign_value_to_option(self, option_name, value):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
-
+        self._raise_key_error_if_option_name_invalid(option_name)
         self[option_name]["value"] = value
 
-    def track_keys_for_option(self, option_name):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
+    def track_keys_for_multiple_options(self, *option_names):
+        for option_name in option_names:
+            self.track_keys_for_option(option_name)
 
+    def track_keys_for_option(self, option_name):
+        self._raise_key_error_if_option_name_invalid(option_name)
         for key in self[option_name]["keybinds"]:
-            self.tracked_keys.append(key)
+            self.tracked_keys.add(key)
 
 
     def reset(self):
@@ -62,40 +57,33 @@ class Keybinder(dict):
     def remove_all_keybinds_from_all_options(self):
         for option_name in self:
             self[option_name]["keybinds"] = set()
-
-        self.tracked_keys = list()
+        self.tracked_keys = set()
 
     def remove_all_keybinds_from_option(self, option_name):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
-
-        for key in self[option_name]["keybinds"]:
-            self.remove_from_tracked_keys(key)
+        self._raise_key_error_if_option_name_invalid(option_name)
+        self.remove_tracked_keys_for_option(option_name)
         self[option_name]["keybinds"] = set()
-        
 
     def remove_keybind_from_option(self, option_name, key):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
-
+        self._raise_key_error_if_option_name_invalid(option_name)
         self[option_name]["keybinds"].discard(key)
-        self.remove_from_tracked_keys(key)
+        self.remove_tracked_key(key)
 
     def reset_all_values(self):
         for option_name in self:
             self[option_name]["value"] = 0
 
-    def remove_from_tracked_keys(self, key):
-        try:
-            self.tracked_keys.remove(key)
-        except ValueError:
-            pass
+    def remove_tracked_keys_for_option(self, option_name):
+        self._raise_key_error_if_option_name_invalid(option_name)
+        for key in self[option_name]["keybinds"]:
+            self.remove_tracked_key(key)
+
+    def remove_tracked_key(self, key):
+        self.tracked_keys.discard(key)
 
         
     def is_key_pressed_for_option(self, option_name):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
-
+        self._raise_key_error_if_option_name_invalid(option_name)
         keys_pressed = pygame.key.get_pressed()
         for key in self[option_name]["keybinds"]:
             if keys_pressed[key]:
@@ -126,11 +114,13 @@ class Keybinder(dict):
                     pass
 
     def get_value_for_option(self, option_name):
-        if option_name not in self:
-            raise KeyError(f"'{option_name}' is not in keybinder")
-
+        self._raise_key_error_if_option_name_invalid(option_name)
         return self[option_name]["value"]
 
+    
+    def _raise_key_error_if_option_name_invalid(self, option_name):
+        if option_name not in self:
+            raise KeyError(f"'{option_name}' is not in keybinder")
 
     def __repr__(self):
         option_names_joined = ", ".join(self.keys())

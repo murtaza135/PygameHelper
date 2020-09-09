@@ -147,6 +147,7 @@ class AccelerationMovementComponent(MovementComponent):
         self.rect.centerx, self.rect.centery = self.position.centerx, self.position.centery
 
     def _apply_acceleration_in_one_direction_only(self):
+        self.keybinds.track_keys_for_multiple_options("right", "left", "up", "down")
         self.keybinds.update_pressed_keys_order()
 
         if self.keybinds.is_key_most_recently_pressed_for_option("left"):
