@@ -40,8 +40,6 @@ class AccelerationMovementComponent(MovementComponent):
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
         self.default_acceleration_delta = Vector2(default_acceleration_delta)
         self.rotation = Rotator2(default_rotation)
-        print(repr(self.rotation))
-        print(self.rotation)
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
 

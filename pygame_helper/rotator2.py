@@ -56,7 +56,7 @@ class Rotator2(object):
     @dispatch(Vector2)
     def set_rotator(self, vector):
         if vector.x == 0 and vector.y == 0:
-            raise ValueError("Could not create Rotator - both x and y cannot be 0")
+            raise ValueError("Could not create Rotator - magnitude of vector cannot be 0")
 
         positive_x_axis_vector = Vector2(1, 0)
         dot_product_value = positive_x_axis_vector.dot(vector)
