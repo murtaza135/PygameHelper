@@ -40,6 +40,8 @@ class AccelerationMovementComponent(MovementComponent):
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
         self.default_acceleration_delta = Vector2(default_acceleration_delta)
         self.rotation = Rotator2(default_rotation)
+        print(repr(self.rotation))
+        print(self.rotation)
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
 
@@ -286,7 +288,7 @@ class AccelerationMovementComponent(MovementComponent):
 
     def get_collision_right(self, group, dokill=False, collide_callback=None):
         if collide_callback == None:
-            collide_callback = AccelerationMovementComponent.collide_positionalrect
+            collide_callback = AccelerationMovementComponent.collide_positional_rect
 
         if self.velocity.x > 0 or (self.velocity.x == 0 and self.acceleration.x > 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
@@ -296,7 +298,7 @@ class AccelerationMovementComponent(MovementComponent):
 
     def get_collision_left(self, group, dokill=False, collide_callback=None):
         if collide_callback == None:
-            collide_callback = AccelerationMovementComponent.collide_positionalrect
+            collide_callback = AccelerationMovementComponent.collide_positional_rect
 
         if self.velocity.x < 0 or (self.velocity.x == 0 and self.acceleration.x < 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
@@ -313,7 +315,7 @@ class AccelerationMovementComponent(MovementComponent):
 
     def get_collision_bottom(self, group, dokill=False, collide_callback=None):
         if collide_callback == None:
-            collide_callback = AccelerationMovementComponent.collide_positionalrect
+            collide_callback = AccelerationMovementComponent.collide_positional_rect
 
         if self.velocity.y > 0 or (self.velocity.y == 0 and self.acceleration.y > 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
@@ -323,7 +325,7 @@ class AccelerationMovementComponent(MovementComponent):
 
     def get_collision_top(self, group, dokill=False, collide_callback=None):
         if collide_callback == None:
-            collide_callback = AccelerationMovementComponent.collide_positionalrect
+            collide_callback = AccelerationMovementComponent.collide_positional_rect
 
         if self.velocity.y < 0 or (self.velocity.y == 0 and self.acceleration.y < 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
@@ -335,5 +337,5 @@ class AccelerationMovementComponent(MovementComponent):
         return [sprite for sprite in group if self.position.colliderect(sprite.rect)]
 
     @staticmethod
-    def collide_positionalrect(sprite_one, sprite_two):
+    def collide_positional_rect(sprite_one, sprite_two):
         return sprite_one.movement.position.rect.colliderect(sprite_two.rect)
