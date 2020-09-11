@@ -63,6 +63,7 @@ class VelocityMovementComponent(MovementComponent):
         self._process_movement_input()
         self._move_x_with_collision(collide_fn_x, group, dokill, collide_callback)
         self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
+        print(self.velocity)
 
     def _move_x_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
         self._set_new_physics_state_and_transform_x()
@@ -208,10 +209,10 @@ class VelocityMovementComponent(MovementComponent):
         self.velocity.y = self.constant_velocity_delta.y
 
     def _set_new_physics_state_and_transform_x(self):
-        if self.velocity.x > abs(self.max_velocity.x):
-            self.velocity.x = abs(self.max_velocity.x)
-        elif self.velocity.x < -abs(self.max_velocity.x):
-            self.velocity.x = -abs(self.max_velocity.x)
+        # if self.velocity.x > abs(self.max_velocity.x):
+        #     self.velocity.x = abs(self.max_velocity.x)
+        # elif self.velocity.x < -abs(self.max_velocity.x):
+        #     self.velocity.x = -abs(self.max_velocity.x)
 
         self.position.x += self.velocity.x * self.frametime
         if self.should_wrap_screen.x:
@@ -219,10 +220,10 @@ class VelocityMovementComponent(MovementComponent):
         self.rect.centerx = self.position.centerx
 
     def _set_new_physics_state_and_transform_y(self):
-        if self.velocity.y > abs(self.max_velocity.y):
-            self.velocity.y = abs(self.max_velocity.y)
-        elif self.velocity.y < -abs(self.max_velocity.y):
-            self.velocity.y = -abs(self.max_velocity.y)
+        # if self.velocity.y > abs(self.max_velocity.y):
+        #     self.velocity.y = abs(self.max_velocity.y)
+        # elif self.velocity.y < -abs(self.max_velocity.y):
+        #     self.velocity.y = -abs(self.max_velocity.y)
 
         self.position.y += self.velocity.y * self.frametime
         if self.should_wrap_screen.y:
