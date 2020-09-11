@@ -11,7 +11,7 @@ import widget
 from movement_component import MovementComponent
 from acceleration_movement_component import AccelerationMovementComponent
 from velocity_movement_component import VelocityMovementComponent
-from tile_based_movement_component import TileBasedMovementComponent
+from tile_movement_component import TileMovementComponent
 from movement_input import MovementInput
 from base_map import Map
 from keybinder import Keybinder
