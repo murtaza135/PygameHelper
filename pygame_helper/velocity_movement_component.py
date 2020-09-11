@@ -118,10 +118,10 @@ class VelocityMovementComponent(MovementComponent):
         if self.keybinds.is_key_pressed_for_option("right"):
             self.rotation.rotator += self.keybinds.get_value_for_option("right") * self.frametime
         if self.keybinds.is_key_pressed_for_option("up"):
-            self.velocity.x = self.keybinds.get_value_for_option("up")
+            self.velocity.x += self.keybinds.get_value_for_option("up")
             self.velocity = self.velocity.rotate(self.rotation.rotator)
         if self.keybinds.is_key_pressed_for_option("down"):
-            self.velocity.x = -self.keybinds.get_value_for_option("down")
+            self.velocity.x -= self.keybinds.get_value_for_option("down")
             self.velocity = self.velocity.rotate(self.rotation.rotator)
 
     def _apply_rotation_only(self):
@@ -142,16 +142,16 @@ class VelocityMovementComponent(MovementComponent):
         self.keybinds.update_pressed_keys_order()
 
         if self.keybinds.is_key_most_recently_pressed_for_option("left"):
-            self.velocity.x = -self.keybinds.get_value_for_option("left")
+            self.velocity.x -= self.keybinds.get_value_for_option("left")
             self.velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("right"):
-            self.velocity.x = self.keybinds.get_value_for_option("right")
+            self.velocity.x += self.keybinds.get_value_for_option("right")
             self.velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("up"):
-            self.velocity.y = -self.keybinds.get_value_for_option("up")
+            self.velocity.y -= self.keybinds.get_value_for_option("up")
             self.velocity.x = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("down"):
-            self.velocity.y = self.keybinds.get_value_for_option("down")
+            self.velocity.y += self.keybinds.get_value_for_option("down")
             self.velocity.x = 0
 
     def _change_absolute_direction(self):
@@ -174,9 +174,9 @@ class VelocityMovementComponent(MovementComponent):
 
     def _apply_velocity_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
-            self.velocity.x = -self.keybinds.get_value_for_option("left")
+            self.velocity.x -= self.keybinds.get_value_for_option("left")
         if self.keybinds.is_key_pressed_for_option("right"):
-            self.velocity.x = self.keybinds.get_value_for_option("right")
+            self.velocity.x += self.keybinds.get_value_for_option("right")
 
     def _change_direction_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
@@ -187,9 +187,9 @@ class VelocityMovementComponent(MovementComponent):
 
     def _apply_velocity_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
-            self.velocity.y = -self.keybinds.get_value_for_option("up")
+            self.velocity.y -= self.keybinds.get_value_for_option("up")
         if self.keybinds.is_key_pressed_for_option("down"):
-            self.velocity.y = self.keybinds.get_value_for_option("down")
+            self.velocity.y += self.keybinds.get_value_for_option("down")
 
     def _change_direction_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
