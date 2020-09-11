@@ -19,8 +19,8 @@ class VelocityMovementComponent(MovementComponent):
     DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
     
     def __init__(self, parent, rect, constant_velocity_delta, max_velocity, default_position=(0, 0), 
-                default_velocity=(0, 0), default_velocity_delta=(0, 0), default_rotation=0, window_size=(800, 600),
-                should_wrap_screen=(True, True), bounce_velocity_ratios=(0, 0, 0, 0), movement_type="eight_way_movement",
+                default_velocity_delta=(0, 0), default_rotation=0, window_size=(800, 600),
+                should_wrap_screen=(True, True), movement_type="eight_way_movement",
                 direction_control=("direction_and_magnitude", "direction_and_magnitude")):
         self.parent = parent
         self.rect = rect
@@ -28,8 +28,7 @@ class VelocityMovementComponent(MovementComponent):
         self.window_size = WHTuple(*window_size)
 
         self.position = PositionalRect(self.rect)
-        self.velocity = Vector2(default_velocity)
-        self.acceleration = Vector2()
+        self.velocity = Vector2()
         self.max_velocity = Vector2(max_velocity)
         self.constant_velocity_delta = Vector2(constant_velocity_delta)
         self.default_velocity_delta = Vector2(default_velocity_delta)
@@ -37,8 +36,6 @@ class VelocityMovementComponent(MovementComponent):
 
         self._keybinds = Keybinder("right", "left", "down", "up", "jump")
 
-        ratios_made_negative_or_zero = [-abs(ratio) for ratio in bounce_velocity_ratios]
-        self.bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
         self.movement_type = movement_type
@@ -91,48 +88,48 @@ class VelocityMovementComponent(MovementComponent):
 
 
     def _process_movement_input(self):
-        if self.movement_type == MovementComponent.ROTATIONAL_MOVEMENT:
+        if self.movement_type == VelocityMovementComponent.ROTATIONAL_MOVEMENT:
             if self.direction_control.x == VelocityMovementComponent.DIRECTION_AND_MAGNITUDE:
-                self._apply_rotation_and_acceleration()
+                self._apply_rotation_and_velocity()
             elif self.direction_control.x == VelocityMovementComponent.DIRECTION_ONLY:
                 self._apply_rotation_only()
             self._rotate_image_and_rect_at_center()
 
         elif self.movement_type == VelocityMovementComponent.FOUR_WAY_MOVEMENT:
             if self.direction_control.x == VelocityMovementComponent.DIRECTION_AND_MAGNITUDE:
-                self._apply_acceleration_in_one_direction_only()
+                self._apply_velocity_in_one_direction_only()
             elif self.direction_control.x == VelocityMovementComponent.DIRECTION_ONLY:
                 self._change_absolute_direction()
 
         elif self.movement_type == VelocityMovementComponent.EIGHT_WAY_MOVEMENT:
             if self.direction_control.x == VelocityMovementComponent.DIRECTION_AND_MAGNITUDE:
-                self._apply_acceleration_x()
+                self._apply_velocity_x()
             elif self.direction_control.x == VelocityMovementComponent.DIRECTION_ONLY:
                 self._change_direction_x()
 
             if self.direction_control.y == VelocityMovementComponent.DIRECTION_AND_MAGNITUDE:
-                self._apply_acceleration_y()
+                self._apply_velocity_y()
             elif self.direction_control.y == VelocityMovementComponent.DIRECTION_ONLY:
                 self._change_direction_y()
 
-    def _apply_rotation_and_acceleration(self):
+    def _apply_rotation_and_velocity(self):
         if self.keybinds.is_key_pressed_for_option("left"):
             self.rotation.rotator -= self.keybinds.get_value_for_option("left") * self.frametime
         if self.keybinds.is_key_pressed_for_option("right"):
             self.rotation.rotator += self.keybinds.get_value_for_option("right") * self.frametime
         if self.keybinds.is_key_pressed_for_option("up"):
-            self.acceleration.x += self.keybinds.get_value_for_option("up")
-            self.acceleration = self.acceleration.rotate(self.rotation.rotator)
+            self.velocity.x += self.keybinds.get_value_for_option("up")
+            self.velocity = self.velocity.rotate(self.rotation.rotator)
         if self.keybinds.is_key_pressed_for_option("down"):
-            self.acceleration.x -= self.keybinds.get_value_for_option("down")
-            self.acceleration = self.acceleration.rotate(self.rotation.rotator)
+            self.velocity.x -= self.keybinds.get_value_for_option("down")
+            self.velocity = self.velocity.rotate(self.rotation.rotator)
 
     def _apply_rotation_only(self):
         if self.keybinds.is_key_pressed_for_option("left"):
             self.rotation.rotator -= self.keybinds.get_value_for_option("left") * self.frametime
         if self.keybinds.is_key_pressed_for_option("right"):
             self.rotation.rotator += self.keybinds.get_value_for_option("right") * self.frametime
-        self.acceleration = self.acceleration.rotate(self.rotation.rotator)
+        self.velocity = self.velocity.rotate(self.rotation.rotator)
 
     def _rotate_image_and_rect_at_center(self):
         self.parent.image = pygame.transform.rotate(self.parent.original_image, -self.rotation.rotator)
@@ -140,21 +137,21 @@ class VelocityMovementComponent(MovementComponent):
         self.rect = self.parent.rect
         self.rect.centerx, self.rect.centery = self.position.centerx, self.position.centery
 
-    def _apply_acceleration_in_one_direction_only(self):
+    def _apply_velocity_in_one_direction_only(self):
         self.keybinds.track_keys_for_multiple_options("right", "left", "up", "down")
         self.keybinds.update_pressed_keys_order()
 
         if self.keybinds.is_key_most_recently_pressed_for_option("left"):
-            self.acceleration.x -= self.keybinds.get_value_for_option("left")
+            self.velocity.x -= self.keybinds.get_value_for_option("left")
             self.velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("right"):
-            self.acceleration.x += self.keybinds.get_value_for_option("right")
+            self.velocity.x += self.keybinds.get_value_for_option("right")
             self.velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("up"):
-            self.acceleration.y -= self.keybinds.get_value_for_option("up")
+            self.velocity.y -= self.keybinds.get_value_for_option("up")
             self.velocity.x = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("down"):
-            self.acceleration.y += self.keybinds.get_value_for_option("down")
+            self.velocity.y += self.keybinds.get_value_for_option("down")
             self.velocity.x = 0
 
     def _change_absolute_direction(self):
@@ -174,35 +171,32 @@ class VelocityMovementComponent(MovementComponent):
             self.constant_velocity_delta.x = 0
             self.constant_velocity_delta.y = abs(self.default_velocity_delta.y)
             self.velocity.x = 0
-        
-        self.acceleration.x = self.constant_velocity_delta.x
-        self.acceleration.y = self.constant_velocity_delta.y
 
-    def _apply_acceleration_x(self):
+    def _apply_velocity_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
-            self.acceleration.x -= self.keybinds.get_value_for_option("left")
+            self.velocity.x -= self.keybinds.get_value_for_option("left")
         if self.keybinds.is_key_pressed_for_option("right"):
-            self.acceleration.x += self.keybinds.get_value_for_option("right")
+            self.velocity.x += self.keybinds.get_value_for_option("right")
 
     def _change_direction_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
             self.constant_velocity_delta.x = -abs(self.constant_velocity_delta.x)
         elif self.keybinds.is_key_pressed_for_option("right"):
             self.constant_velocity_delta.x = abs(self.constant_velocity_delta.x)
-        self.acceleration.x = self.constant_velocity_delta.x
+        self.velocity.x = self.constant_velocity_delta.x
 
-    def _apply_acceleration_y(self):
+    def _apply_velocity_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
-            self.acceleration.y -= self.keybinds.get_value_for_option("up")
+            self.velocity.y -= self.keybinds.get_value_for_option("up")
         if self.keybinds.is_key_pressed_for_option("down"):
-            self.acceleration.y += self.keybinds.get_value_for_option("down")
+            self.velocity.y += self.keybinds.get_value_for_option("down")
 
     def _change_direction_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
             self.constant_velocity_delta.y = -abs(self.constant_velocity_delta.y)
         elif self.keybinds.is_key_pressed_for_option("down"):
             self.constant_velocity_delta.y = abs(self.constant_velocity_delta.y)
-        self.acceleration.y = self.constant_velocity_delta.y
+        self.velocity.y = self.constant_velocity_delta.y
 
     def _jump_if_key_pressed(self):
         if self.keybinds.is_key_pressed_for_option("jump"):
@@ -267,7 +261,8 @@ class VelocityMovementComponent(MovementComponent):
         if sprite_collided["side"] == "top":
             pass
         elif sprite_collided["side"] == "bottom":
-            self._jump_if_key_pressed()
+            # self._jump_if_key_pressed()
+            pass
 
 
     def get_x_collision(self, group, dokill=False, collide_callback=None):
