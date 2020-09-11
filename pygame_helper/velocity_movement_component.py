@@ -5,6 +5,7 @@ from positional_rect import PositionalRect
 from keybinder import Keybinder
 from movement_component import MovementComponent
 from utilities import WHTuple, XYTuple, NESWTuple
+import math
 
 
 class VelocityMovementComponent(MovementComponent):
@@ -18,8 +19,8 @@ class VelocityMovementComponent(MovementComponent):
     DIRECTION_ONLY = "direction_only"
     DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
     
-    def __init__(self, parent, rect, constant_velocity_delta, max_velocity, default_position=(0, 0), 
-                default_velocity_delta=(0, 0), default_rotation=0, window_size=(800, 600),
+    def __init__(self, parent, rect, constant_velocity_delta, default_position=(0, 0), 
+                default_velocity_delta=(0, 0), default_rotation=0, window_size=(800, 600), should_bounce=(False, False, False, False),
                 should_wrap_screen=(True, True), movement_type="eight_way_movement",
                 direction_control=("direction_and_magnitude", "direction_and_magnitude")):
         self.parent = parent
@@ -29,13 +30,13 @@ class VelocityMovementComponent(MovementComponent):
 
         self.position = PositionalRect(self.rect)
         self.velocity = Vector2()
-        self.max_velocity = Vector2(max_velocity)
         self.constant_velocity_delta = Vector2(constant_velocity_delta)
         self.default_velocity_delta = Vector2(default_velocity_delta)
         self.rotation = Rotator2(default_rotation)
 
-        self._keybinds = Keybinder("right", "left", "down", "up", "jump")
+        self._keybinds = Keybinder("right", "left", "down", "up")
 
+        self.should_bounce = NESWTuple(*should_bounce)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
         self.movement_type = movement_type
@@ -54,16 +55,15 @@ class VelocityMovementComponent(MovementComponent):
 
     def move(self):
         self._reset_velocity()
-        self._process_movement_input()
+        self._process_input_into_velocity_changes()
         self._set_new_physics_state_and_transform_x()
         self._set_new_physics_state_and_transform_y()
 
     def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collide_callback=None):
         self._reset_velocity()
-        self._process_movement_input()
+        self._process_input_into_velocity_changes()
         self._move_x_with_collision(collide_fn_x, group, dokill, collide_callback)
         self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
-        print(self.velocity)
 
     def _move_x_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
         self._set_new_physics_state_and_transform_x()
@@ -74,7 +74,7 @@ class VelocityMovementComponent(MovementComponent):
 
         if sprite_collided is not None:
             self._move_x_back_if_collided(sprite_collided)
-            self._apply_jump_x(sprite_collided)
+            self._apply_bounce_x(sprite_collided)
 
     def _move_y_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
         self._set_new_physics_state_and_transform_y()
@@ -85,10 +85,10 @@ class VelocityMovementComponent(MovementComponent):
 
         if sprite_collided is not None:
             self._move_y_back_if_collided(sprite_collided)
-            self._apply_jump_y(sprite_collided)
+            self._apply_bounce_y(sprite_collided)
 
 
-    def _process_movement_input(self):
+    def _process_input_into_velocity_changes(self):
         if self.movement_type == VelocityMovementComponent.ROTATIONAL_MOVEMENT:
             if self.direction_control.x == VelocityMovementComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_rotation_and_velocity()
@@ -112,6 +112,13 @@ class VelocityMovementComponent(MovementComponent):
                 self._apply_velocity_y()
             elif self.direction_control.y == VelocityMovementComponent.DIRECTION_ONLY:
                 self._change_direction_y()
+
+            self._set_velocity_to_maximum_in_eight_way_movement()
+
+    def _set_velocity_to_maximum_in_eight_way_movement(self):
+        if self.velocity.x != 0 and self.velocity.y != 0:
+            self.velocity.x *= math.cos(math.pi / 4)
+            self.velocity.y *= math.sin(math.pi / 4)
 
     def _apply_rotation_and_velocity(self):
         if self.keybinds.is_key_pressed_for_option("left"):
@@ -199,32 +206,18 @@ class VelocityMovementComponent(MovementComponent):
             self.constant_velocity_delta.y = abs(self.constant_velocity_delta.y)
         self.velocity.y = self.constant_velocity_delta.y
 
-    def _jump_if_key_pressed(self):
-        if self.keybinds.is_key_pressed_for_option("jump"):
-            self.velocity.y = -abs(self.keybinds.get_value_for_option("jump"))
-
     
     def _reset_velocity(self):
         self.velocity.x = self.constant_velocity_delta.x
         self.velocity.y = self.constant_velocity_delta.y
 
     def _set_new_physics_state_and_transform_x(self):
-        # if self.velocity.x > abs(self.max_velocity.x):
-        #     self.velocity.x = abs(self.max_velocity.x)
-        # elif self.velocity.x < -abs(self.max_velocity.x):
-        #     self.velocity.x = -abs(self.max_velocity.x)
-
         self.position.x += self.velocity.x * self.frametime
         if self.should_wrap_screen.x:
             self._wrap_around_screen_x()
         self.rect.centerx = self.position.centerx
 
     def _set_new_physics_state_and_transform_y(self):
-        # if self.velocity.y > abs(self.max_velocity.y):
-        #     self.velocity.y = abs(self.max_velocity.y)
-        # elif self.velocity.y < -abs(self.max_velocity.y):
-        #     self.velocity.y = -abs(self.max_velocity.y)
-
         self.position.y += self.velocity.y * self.frametime
         if self.should_wrap_screen.y:
             self._wrap_around_screen_y()
@@ -258,18 +251,17 @@ class VelocityMovementComponent(MovementComponent):
                 self.position.top = sprite_collided["sprite"].rect.bottom
             self.rect.centery = self.position.centery
 
-    def _apply_jump_x(self, sprite_collided):
-        if sprite_collided["side"] == "right":
-            pass
-        elif sprite_collided["side"] == "left":
-            pass
+    def _apply_bounce_x(self, sprite_collided):
+        if sprite_collided["side"] == "right" and self.should_bounce.east:
+            self.velocity.x *= -1
+        elif sprite_collided["side"] == "left" and self.should_bounce.west:
+            self.velocity.x *= -1
 
-    def _apply_jump_y(self, sprite_collided):
-        if sprite_collided["side"] == "top":
-            pass
-        elif sprite_collided["side"] == "bottom":
-            # self._jump_if_key_pressed()
-            pass
+    def _apply_bounce_y(self, sprite_collided):
+        if sprite_collided["side"] == "top" and self.should_bounce.north:
+            self.velocity.y *= -1
+        elif sprite_collided["side"] == "bottom" and self.should_bounce.south:
+            self.velocity.y *= -1
 
 
     def get_x_collision(self, group, dokill=False, collide_callback=None):
