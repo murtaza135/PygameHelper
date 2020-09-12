@@ -13,7 +13,6 @@ class TileMovementComponent(MovementComponent):
     ### movement_type ###
     FOUR_WAY_MOVEMENT = "four_way_movement"
     EIGHT_WAY_MOVEMENT = "eight_way_movement"
-    ROTATIONAL_MOVEMENT = "rotational_movement"
 
     ### direction_control ###
     DIRECTION_ONLY = "direction_only"
@@ -38,7 +37,6 @@ class TileMovementComponent(MovementComponent):
         self._default_velocity_delta = Vector2(default_velocity_delta)
         self._default_velocity_delta.x *= self.tile_geometry.width
         self._default_velocity_delta.y *= self.tile_geometry.height
-        self.last_known_velocity = Vector2()
 
         self._keybinds = Keybinder("right", "left", "down", "up")
 
@@ -221,33 +219,17 @@ class TileMovementComponent(MovementComponent):
         elif self._position.y < 0:
             self._position.y = self.window_size.height
 
-    def _move_x_back_if_collided(self, sprite_collided):
-        if sprite_collided is not None:
-            if sprite_collided["side"] == "right":
-                self._position.right = sprite_collided["sprite"].rect.left
-            if sprite_collided["side"] == "left":
-                self._position.left = sprite_collided["sprite"].rect.right
-            self.rect.x = self._position.x
-
-    def _move_y_back_if_collided(self, sprite_collided):
-        if sprite_collided is not None:
-            if sprite_collided["side"] == "bottom":
-                self._position.bottom = sprite_collided["sprite"].rect.top
-            if sprite_collided["side"] == "top":
-                self._position.top = sprite_collided["sprite"].rect.bottom
-            self.rect.y = self._position.y
-
     def _apply_bounce_x(self, sprite_collided):
         if sprite_collided["side"] == "right" and self.should_bounce.east:
-            self._velocity.x *= -1
+            self._constant_velocity_delta.x *= -1
         elif sprite_collided["side"] == "left" and self.should_bounce.west:
-            self._velocity.x *= -1
+            self._constant_velocity_delta.x *= -1
 
     def _apply_bounce_y(self, sprite_collided):
         if sprite_collided["side"] == "top" and self.should_bounce.north:
-            self._velocity.y *= -1
+            self._constant_velocity_delta.y *= -1
         elif sprite_collided["side"] == "bottom" and self.should_bounce.south:
-            self._velocity.y *= -1
+            self._constant_velocity_delta.y *= -1
 
 
     def get_x_collision(self, group, dokill=False, collide_callback=None):
