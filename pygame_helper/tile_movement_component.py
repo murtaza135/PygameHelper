@@ -174,16 +174,16 @@ class TileMovementComponent(MovementComponent):
         self.keybinds.update_pressed_keys_order()
 
         if self.keybinds.is_key_most_recently_pressed_for_option("left"):
-            self._velocity.x -= self.keybinds.get_value_for_option("left")
+            self._velocity.x -= self.keybinds.get_value_for_option("left") * self.tile_geometry.width
             self._velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("right"):
-            self._velocity.x += self.keybinds.get_value_for_option("right")
+            self._velocity.x += self.keybinds.get_value_for_option("right") * self.tile_geometry.width
             self._velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("up"):
-            self._velocity.y -= self.keybinds.get_value_for_option("up")
+            self._velocity.y -= self.keybinds.get_value_for_option("up") * self.tile_geometry.height
             self._velocity.x = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("down"):
-            self._velocity.y += self.keybinds.get_value_for_option("down")
+            self._velocity.y += self.keybinds.get_value_for_option("down") * self.tile_geometry.height
             self._velocity.x = 0
 
     def _change_absolute_direction(self):
@@ -206,9 +206,9 @@ class TileMovementComponent(MovementComponent):
 
     def _apply_velocity_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
-            self._velocity.x -= self.keybinds.get_value_for_option("left")
+            self._velocity.x -= self.keybinds.get_value_for_option("left") * self.tile_geometry.width
         if self.keybinds.is_key_pressed_for_option("right"):
-            self._velocity.x += self.keybinds.get_value_for_option("right")
+            self._velocity.x += self.keybinds.get_value_for_option("right") * self.tile_geometry.width
 
     def _change_direction_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
@@ -219,9 +219,9 @@ class TileMovementComponent(MovementComponent):
 
     def _apply_velocity_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
-            self._velocity.y -= self.keybinds.get_value_for_option("up")
+            self._velocity.y -= self.keybinds.get_value_for_option("up") * self.tile_geometry.height
         if self.keybinds.is_key_pressed_for_option("down"):
-            self._velocity.y += self.keybinds.get_value_for_option("down")
+            self._velocity.y += self.keybinds.get_value_for_option("down") * self.tile_geometry.height
 
     def _change_direction_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
@@ -239,47 +239,13 @@ class TileMovementComponent(MovementComponent):
         self._position.x += self._velocity.x * self.frametime
         if self.should_wrap_screen.x:
             self._wrap_around_screen_x()
-
-        if self.velocity.x == 0:
-            if self._position.x % self.tile_geometry.width > self.tile_geometry.width*0.1:
-                self._position.x += self.last_known_velocity.x * self.frametime
-            else:
-                if self.last_known_velocity.x > 0:
-                    self._position.x = math.ceil(self._position.x / self.tile_geometry.width) * self.tile_geometry.width
-                elif self.last_known_velocity.x < 0:
-                    self._position.x = math.floor(self._position.x / self.tile_geometry.width) * self.tile_geometry.width
-        else:
-            self.last_known_velocity.x = self._velocity.x
-
-        # if self.velocity.x > 0:
-        #     self.rect.x = math.floor(self._position.x / self.tile_geometry.width) * self.tile_geometry.width
-        # elif self.velocity.x < 0:
-        #     self.rect.x = math.ceil(self._position.x / self.tile_geometry.width) * self.tile_geometry.width
-        # else:
-        self.rect.x = self._position.x
+        self.rect.x = math.floor(self._position.x / self.tile_geometry.width) * self.tile_geometry.width
 
     def _set_new_physics_state_and_transform_y(self):
         self._position.y += self._velocity.y * self.frametime
         if self.should_wrap_screen.y:
             self._wrap_around_screen_y()
-
-        if self.velocity.y == 0:
-            if self._position.y % self.tile_geometry.height > self.tile_geometry.height*0.2:
-                self._position.y += self.last_known_velocity.y * self.frametime
-            else:
-                if self.last_known_velocity.y > 0:
-                    self._position.y = math.ceil(self._position.y / self.tile_geometry.height) * self.tile_geometry.height
-                elif self.last_known_velocity.y < 0:
-                    self._position.y = math.floor(self._position.y / self.tile_geometry.height) * self.tile_geometry.height
-        else:
-            self.last_known_velocity.y = self._velocity.y
-
-        # if self.velocity.y > 0:
-        #     self.rect.y = math.ceil(self._position.y / self.tile_geometry.height) * self.tile_geometry.height
-        # elif self.velocity.y < 0:
-        #     self.rect.y = math.floor(self._position.y / self.tile_geometry.height) * self.tile_geometry.height
-        # else:
-        self.rect.y = self._position.y
+        self.rect.y = math.floor(self._position.y / self.tile_geometry.height) * self.tile_geometry.height
 
     def _wrap_around_screen_x(self):
         if self._position.x >= self.window_size.width:
