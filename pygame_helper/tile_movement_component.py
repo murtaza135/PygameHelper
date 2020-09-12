@@ -38,7 +38,6 @@ class TileMovementComponent(MovementComponent):
         self._default_velocity_delta = Vector2(default_velocity_delta)
         self._default_velocity_delta.x *= self.tile_geometry.width
         self._default_velocity_delta.y *= self.tile_geometry.height
-        # self.rotation = Rotator2(default_rotation)
         self.last_known_velocity = Vector2()
 
         self._keybinds = Keybinder("right", "left", "down", "up")
@@ -58,6 +57,13 @@ class TileMovementComponent(MovementComponent):
         frametime_ms = self.parent.game_mode.game.clock.get_time()
         frametime_seconds = frametime_ms / 1000
         return frametime_seconds
+
+    @property
+    def position(self):
+        return Vector2(
+            math.floor(self._position.x / self.tile_geometry.width),
+            math.floor(self._position.y / self.tile_geometry.height)
+        )
 
     @property
     def velocity(self):
@@ -80,8 +86,6 @@ class TileMovementComponent(MovementComponent):
         self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
 
     def _move_x_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
-        # self._set_new_physics_state_and_transform_x()
-
         sprite_collided = None
         if collide_fn is not None:
             sprite_collided = collide_fn(group, dokill, collide_callback)
@@ -91,13 +95,7 @@ class TileMovementComponent(MovementComponent):
         else:
             self._apply_bounce_x(sprite_collided)
 
-        # if sprite_collided is not None:
-        #     self._move_x_back_if_collided(sprite_collided)
-        #     self._apply_bounce_x(sprite_collided)
-
     def _move_y_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
-        # self._set_new_physics_state_and_transform_y()
-
         sprite_collided = None
         if collide_fn is not None:
             sprite_collided = collide_fn(group, dokill, collide_callback)
@@ -107,19 +105,8 @@ class TileMovementComponent(MovementComponent):
         else:
             self._apply_bounce_y(sprite_collided)
 
-        # if sprite_collided is not None:
-        #     self._move_y_back_if_collided(sprite_collided)
-        #     self._apply_bounce_y(sprite_collided)
-
 
     def _process_input_into_velocity_changes(self):
-        # if self.movement_type == TileMovementComponent.ROTATIONAL_MOVEMENT:
-        #     if self.direction_control.x == TileMovementComponent.DIRECTION_AND_MAGNITUDE:
-        #         self._apply_rotation_and_velocity()
-        #     elif self.direction_control.x == TileMovementComponent.DIRECTION_ONLY:
-        #         self._apply_rotation_only()
-        #     self._rotate_image_and_rect_at_center()
-
         if self.movement_type == TileMovementComponent.FOUR_WAY_MOVEMENT:
             if self.direction_control.x == TileMovementComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_velocity_in_one_direction_only()
@@ -143,31 +130,6 @@ class TileMovementComponent(MovementComponent):
         if self._velocity.x != 0 and self._velocity.y != 0:
             self._velocity.x *= math.cos(math.pi / 4)
             self._velocity.y *= math.sin(math.pi / 4)
-
-    def _apply_rotation_and_velocity(self):
-        if self.keybinds.is_key_pressed_for_option("left"):
-            self.rotation.rotator -= self.keybinds.get_value_for_option("left") * self.frametime
-        if self.keybinds.is_key_pressed_for_option("right"):
-            self.rotation.rotator += self.keybinds.get_value_for_option("right") * self.frametime
-        if self.keybinds.is_key_pressed_for_option("up"):
-            self._velocity.x += self.keybinds.get_value_for_option("up")
-            self._velocity = self._velocity.rotate(self.rotation.rotator)
-        if self.keybinds.is_key_pressed_for_option("down"):
-            self._velocity.x -= self.keybinds.get_value_for_option("down")
-            self._velocity = self._velocity.rotate(self.rotation.rotator)
-
-    def _apply_rotation_only(self):
-        if self.keybinds.is_key_pressed_for_option("left"):
-            self.rotation.rotator -= self.keybinds.get_value_for_option("left") * self.frametime
-        if self.keybinds.is_key_pressed_for_option("right"):
-            self.rotation.rotator += self.keybinds.get_value_for_option("right") * self.frametime
-        self._velocity = self._velocity.rotate(self.rotation.rotator)
-
-    def _rotate_image_and_rect_at_center(self):
-        self.parent.image = pygame.transform.rotate(self.parent.original_image, -self.rotation.rotator)
-        self.parent.rect = self.parent.image.get_rect()
-        self.rect = self.parent.rect
-        self.rect.centerx, self.rect.centery = self._position.centerx, self._position.centery
 
     def _apply_velocity_in_one_direction_only(self):
         self.keybinds.track_keys_for_multiple_options("right", "left", "up", "down")
@@ -296,9 +258,6 @@ class TileMovementComponent(MovementComponent):
             return self.get_collision_left(group, dokill, collide_callback)
 
     def get_collision_right(self, group, dokill=False, collide_callback=None):
-        # if collide_callback == None:
-        #     collide_callback = TileMovementComponent.collide_positional_rect
-
         if self._velocity.x > 0:
             self.rect.x += self.tile_geometry.width
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
@@ -308,9 +267,6 @@ class TileMovementComponent(MovementComponent):
         return None
 
     def get_collision_left(self, group, dokill=False, collide_callback=None):
-        # if collide_callback == None:
-        #     collide_callback = TileMovementComponent.collide_positional_rect
-
         if self._velocity.x < 0:
             self.rect.x -= self.tile_geometry.width
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
@@ -327,9 +283,6 @@ class TileMovementComponent(MovementComponent):
             return self.get_collision_top(group, dokill, collide_callback)
 
     def get_collision_bottom(self, group, dokill=False, collide_callback=None):
-        # if collide_callback == None:
-        #     collide_callback = TileMovementComponent.collide_positional_rect
-
         if self._velocity.y > 0:
             self.rect.y += self.tile_geometry.height
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
@@ -339,9 +292,6 @@ class TileMovementComponent(MovementComponent):
         return None
 
     def get_collision_top(self, group, dokill=False, collide_callback=None):
-        # if collide_callback == None:
-        #     collide_callback = TileMovementComponent.collide_positional_rect
-
         if self._velocity.y < 0:
             self.rect.y -= self.tile_geometry.height
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
