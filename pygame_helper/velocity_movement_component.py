@@ -253,15 +253,15 @@ class VelocityMovementComponent(MovementComponent):
 
     def _apply_bounce_x(self, sprite_collided):
         if sprite_collided["side"] == "right" and self.should_bounce.east:
-            self.velocity.x *= -1
+            self.constant_velocity_delta.x *= -1
         elif sprite_collided["side"] == "left" and self.should_bounce.west:
-            self.velocity.x *= -1
+            self.constant_velocity_delta.x *= -1
 
     def _apply_bounce_y(self, sprite_collided):
         if sprite_collided["side"] == "top" and self.should_bounce.north:
-            self.velocity.y *= -1
+            self.constant_velocity_delta.y *= -1
         elif sprite_collided["side"] == "bottom" and self.should_bounce.south:
-            self.velocity.y *= -1
+            self.constant_velocity_delta.y *= -1
 
 
     def get_x_collision(self, group, dokill=False, collide_callback=None):
