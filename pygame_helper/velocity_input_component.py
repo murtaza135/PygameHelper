@@ -1,59 +1,35 @@
 import pygame
-from input_component import InputComponent
+from abstract_input_component import AbstractInputComponent
 
 
-class VelocityInputComponent(InputComponent):
+class VelocityInputComponent(AbstractInputComponent):
     
-    ### movement_type ###
-    FOUR_WAY_MOVEMENT = "four_way_movement"
-    EIGHT_WAY_MOVEMENT = "eight_way_movement"
-    ROTATIONAL_MOVEMENT = "rotational_movement"
-
-    ### direction_control ###
-    DIRECTION_ONLY = "direction_only"
-    DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
-
-
     def __init__(self, movement_component, keybinder, movement_type, direction_control, direction_control_y=None):
-        self.movement = movement_component
-        self.parent_sprite = self.movement.parent
-        self.keybinder = keybinder
+        super().__init__(movement_component, keybinder, movement_type, direction_control, direction_control_y)
 
-        self.movement_type = movement_type
-        self.direction_control = direction_control
-        self.direction_control_y = direction_control_y
-
-        self._check_direction_control_y_for_eight_way_movement()
-
-    def _check_direction_control_y_for_eight_way_movement(self):
-        if self.movement_type == VelocityInputComponent.EIGHT_WAY_MOVEMENT:
-            if self.direction_control_y is None:
-                raise ValueError("direction_control_y cannot be None if Eight Way Movement is used")
-
-    
     def process_movement_input(self):
-        if self.movement_type == VelocityInputComponent.ROTATIONAL_MOVEMENT:
-            if self.direction_control == VelocityInputComponent.DIRECTION_AND_MAGNITUDE:
+        if self.movement_type == AbstractInputComponent.ROTATIONAL_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_rotation_and_velocity()
-            elif self.direction_control == VelocityInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._apply_rotation_only()
             self._rotate_image_and_rect_at_center()
 
-        elif self.movement_type == VelocityInputComponent.FOUR_WAY_MOVEMENT:
-            if self.direction_control == VelocityInputComponent.DIRECTION_AND_MAGNITUDE:
+        elif self.movement_type == AbstractInputComponent.FOUR_WAY_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_velocity_in_one_direction_only()
-            elif self.direction_control == VelocityInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_absolute_direction()
 
-        elif self.movement_type == VelocityInputComponent.EIGHT_WAY_MOVEMENT:
-            if self.direction_control == VelocityInputComponent.DIRECTION_AND_MAGNITUDE:
+        elif self.movement_type == AbstractInputComponent.EIGHT_WAY_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_velocity_x()
-            elif self.direction_control == VelocityInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_direction_x()
 
-            if self.direction_control_y == VelocityInputComponent.DIRECTION_AND_MAGNITUDE:
+            if self.direction_control_y == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_velocity_y()
-            elif self.direction_control_y == VelocityInputComponent.DIRECTION_ONLY:
+            elif self.direction_control_y == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_direction_y()
 
             self.movement.ensure_velocity_does_not_exceed_maximum()

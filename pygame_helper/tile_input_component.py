@@ -1,52 +1,28 @@
-import pygame
-from input_component import InputComponent
+from abstract_input_component import AbstractInputComponent
 
 
-class TileInputComponent(InputComponent):
-
-    ### movement_type ###
-    FOUR_WAY_MOVEMENT = "four_way_movement"
-    EIGHT_WAY_MOVEMENT = "eight_way_movement"
-
-    ### direction_control ###
-    DIRECTION_ONLY = "direction_only"
-    DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
-
+class TileInputComponent(AbstractInputComponent):
 
     def __init__(self, movement_component, keybinder, movement_type, direction_control, direction_control_y=None):
-        self.movement = movement_component
-        self.parent_sprite = self.movement.parent
+        super().__init__(movement_component, keybinder, movement_type, direction_control, direction_control_y)
         self.tile_geometry = self.movement.tile_geometry
-        self.keybinder = keybinder
 
-        self.movement_type = movement_type
-        self.direction_control = direction_control
-        self.direction_control_y = direction_control_y
-
-        self._check_direction_control_y_for_eight_way_movement()
-
-    def _check_direction_control_y_for_eight_way_movement(self):
-        if self.movement_type == TileInputComponent.EIGHT_WAY_MOVEMENT:
-            if self.direction_control_y is None:
-                raise ValueError("direction_control_y cannot be None if Eight Way Movement is used")
-
-    
     def process_movement_input(self):
-        if self.movement_type == TileInputComponent.FOUR_WAY_MOVEMENT:
-            if self.direction_control == TileInputComponent.DIRECTION_AND_MAGNITUDE:
+        if self.movement_type == AbstractInputComponent.FOUR_WAY_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_velocity_in_one_direction_only()
-            elif self.direction_control == TileInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_absolute_direction()
 
-        elif self.movement_type == TileInputComponent.EIGHT_WAY_MOVEMENT:
-            if self.direction_control == TileInputComponent.DIRECTION_AND_MAGNITUDE:
+        elif self.movement_type == AbstractInputComponent.EIGHT_WAY_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_velocity_x()
-            elif self.direction_control == TileInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_direction_x()
 
-            if self.direction_control_y == TileInputComponent.DIRECTION_AND_MAGNITUDE:
+            if self.direction_control_y == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_velocity_y()
-            elif self.direction_control_y == TileInputComponent.DIRECTION_ONLY:
+            elif self.direction_control_y == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_direction_y()
 
             self.movement.ensure_velocity_does_not_exceed_maximum()

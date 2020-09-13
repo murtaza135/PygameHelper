@@ -1,63 +1,39 @@
 import pygame
-from input_component import InputComponent 
+from abstract_input_component import AbstractInputComponent 
 
 
-class AccelerationInputComponent(InputComponent):
+class AccelerationInputComponent(AbstractInputComponent):
 
-    ### movement_type ###
-    FOUR_WAY_MOVEMENT = "four_way_movement"
-    EIGHT_WAY_MOVEMENT = "eight_way_movement"
-    ROTATIONAL_MOVEMENT = "rotational_movement"
-
-    ### direction_control ###
-    DIRECTION_ONLY = "direction_only"
-    DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
-    
-    
     def __init__(self, movement_component, keybinder, movement_type, direction_control, direction_control_y=None):
-        self.movement = movement_component
-        self.parent_sprite = self.movement.parent
-        self.keybinder = keybinder
-
-        self.movement_type = movement_type
-        self.direction_control = direction_control
-        self.direction_control_y = direction_control_y
-
-        self._check_direction_control_y_for_eight_way_movement()
-
-    def _check_direction_control_y_for_eight_way_movement(self):
-        if self.movement_type == AccelerationInputComponent.EIGHT_WAY_MOVEMENT:
-            if self.direction_control_y is None:
-                raise ValueError("direction_control_y cannot be None if Eight Way Movement is used")
-
+        super().__init__(movement_component, keybinder, movement_type, direction_control, direction_control_y)
 
     def set_jump_velocity_if_key_pressed(self):
         if self.keybinder.is_key_pressed_for_option("jump"):
             self.movement.velocity.y = -abs(self.keybinder.get_value_for_option("jump"))
 
     def process_movement_input(self):
-        if self.movement_type == AccelerationInputComponent.ROTATIONAL_MOVEMENT:
-            if self.direction_control == AccelerationInputComponent.DIRECTION_AND_MAGNITUDE:
+        if self.movement_type == AbstractInputComponent.ROTATIONAL_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_rotation_and_acceleration()
-            elif self.direction_control == AccelerationInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._apply_rotation_only()
             self._rotate_image_and_rect_at_center()
 
-        elif self.movement_type == AccelerationInputComponent.FOUR_WAY_MOVEMENT:
-            if self.direction_control == AccelerationInputComponent.DIRECTION_AND_MAGNITUDE:
+        elif self.movement_type == AbstractInputComponent.FOUR_WAY_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_acceleration_in_one_direction_only()
-            elif self.direction_control == AccelerationInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_absolute_direction()
 
-        elif self.movement_type == AccelerationInputComponent.EIGHT_WAY_MOVEMENT:
-            if self.direction_control == AccelerationInputComponent.DIRECTION_AND_MAGNITUDE:
+        elif self.movement_type == AbstractInputComponent.EIGHT_WAY_MOVEMENT:
+            if self.direction_control == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_acceleration_x()
-            elif self.direction_control == AccelerationInputComponent.DIRECTION_ONLY:
+            elif self.direction_control == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_direction_x()
 
-            if self.direction_control_y == AccelerationInputComponent.DIRECTION_AND_MAGNITUDE:
+            if self.direction_control_y == AbstractInputComponent.DIRECTION_AND_MAGNITUDE:
                 self._apply_acceleration_y()
-            elif self.direction_control_y == AccelerationInputComponent.DIRECTION_ONLY:
+            elif self.direction_control_y == AbstractInputComponent.DIRECTION_ONLY:
                 self._change_direction_y()
 
     def _apply_rotation_and_acceleration(self):

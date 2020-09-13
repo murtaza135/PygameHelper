@@ -8,20 +8,20 @@ from pygame_timer import PygameTimer
 from utilities import XYTuple, WHTuple, NESWTuple
 import exceptions
 import widget
+from base_map import Map
+from keybinder import Keybinder
+
 from movement_component import MovementComponent
 from acceleration_movement_component import AccelerationMovementComponent
 from velocity_movement_component import VelocityMovementComponent
 from tile_movement_component import TileMovementComponent
-from movement_input import MovementInput
-from base_map import Map
-from keybinder import Keybinder
 
-from input_component import InputComponent
+from abstract_input_component import AbstractInputComponent
 from acceleration_input_component import AccelerationInputComponent
 from velocity_input_component import VelocityInputComponent
 from tile_input_component import TileInputComponent
 
-from collision_component import CollisionComponent
+from abstract_collision_component import AbstractCollisionComponent
 from acceleration_collision_component import AccelerationCollisionComponent
 from velocity_collision_component import VelocityCollisionComponent
 from tile_collision_component import TileCollisionComponent
