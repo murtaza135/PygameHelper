@@ -18,6 +18,8 @@ from keybinder import Keybinder
 
 from input_component import InputComponent
 from acceleration_input_component import AccelerationInputComponent
+from velocity_input_component import VelocityInputComponent
 
 from collision_component import CollisionComponent
 from acceleration_collision_component import AccelerationCollisionComponent
+from velocity_collision_component import VelocityCollisionComponent

@@ -23,16 +23,13 @@ class AccelerationMovementComponent(MovementComponent):
                 movement_type="eight_way_movement", direction_control="direction_and_magnitude", direction_control_y=None):
         self.parent = parent
         self.rect = rect
-        self.rect.centerx = default_position[0]
-        self.rect.centery = default_position[1]
+        self.rect.center = (default_position[0], default_position[1])
         self.window_size = WHTuple(*window_size)
 
         self.position = PositionalRect(self.rect)
         self.velocity = Vector2()
         self.acceleration = Vector2()
-        self.friction = Vector2(friction)
-        self.friction.x = -abs(self.friction.x)
-        self.friction.y = -abs(self.friction.y)
+        self.friction = Vector2(-abs(friction[0]), -abs(friction[1]))
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
         self.default_acceleration_delta = Vector2(default_acceleration_delta)
         self.rotation = Rotator2(default_rotation)
@@ -42,12 +39,20 @@ class AccelerationMovementComponent(MovementComponent):
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
         self._keybinder = Keybinder("right", "left", "down", "up", "jump")
-        self.movement_input = AccelerationInputComponent(self, self._keybinder, movement_type, direction_control, direction_control_y)
-        self.collision = AccelerationCollisionComponent(self)
+        self._movement_input = AccelerationInputComponent(self, self._keybinder, movement_type, direction_control, direction_control_y)
+        self._collision = AccelerationCollisionComponent(self)
 
     @property
     def keybinds(self):
         return self._keybinder
+
+    @property
+    def movement_input(self):
+        return self._movement_input
+
+    @property
+    def collision(self):
+        return self._collision
 
     @property
     def frametime(self):
@@ -58,13 +63,13 @@ class AccelerationMovementComponent(MovementComponent):
 
     def move(self):
         self._reset_acceleration()
-        self.movement_input.process_movement_input()
+        self._movement_input.process_movement_input()
         self._set_new_physics_state_and_transform_x()
         self._set_new_physics_state_and_transform_y()
 
     def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collide_callback=None):
         self._reset_acceleration()
-        self.movement_input.process_movement_input()
+        self._movement_input.process_movement_input()
         self._move_x_with_collision(collide_fn_x, group, dokill, collide_callback)
         self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
 
@@ -150,4 +155,4 @@ class AccelerationMovementComponent(MovementComponent):
             self.velocity.y *= self.bounce_velocity_ratios.north
         elif sprite_collided["side"] == "bottom":
             self.velocity.y *= self.bounce_velocity_ratios.south
-            self.movement_input.set_jump_velocity_if_key_pressed()
+            self._movement_input.set_jump_velocity_if_key_pressed()
