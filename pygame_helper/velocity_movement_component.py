@@ -20,7 +20,10 @@ class VelocityMovementComponent(AbstractMovementComponent):
 
         super().__init__(parent, rect, default_position, default_rotation, window_size, should_wrap_screen)
         self.constant_velocity_delta = Vector2(constant_velocity_delta)
-        self.default_velocity_delta = Vector2(default_velocity_delta) if not None else Vector2(constant_velocity_delta)
+        if default_velocity_delta is not None:
+            self.default_velocity_delta = Vector2(default_velocity_delta)
+        else:
+            self.default_velocity_delta = Vector2(constant_velocity_delta)
         self.should_bounce = NESWTuple(*should_bounce)
 
         self.keybinder = Keybinder("right", "left", "down", "up")

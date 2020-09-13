@@ -7,8 +7,6 @@ from acceleration_collision_component import AccelerationCollisionComponent
 from utilities import WHTuple, XYTuple, NESWTuple
 
 
-# TODO clean up code and separate into classes, make better names
-# TODO make attributes private, and ability to change certain attributes only
 # TODO stop movement going faster than what it should be when both x and y movement is occuring
 # TODO add ability to jump from all 4 sides
 
@@ -25,7 +23,10 @@ class AccelerationMovementComponent(AbstractMovementComponent):
         self.acceleration = Vector2()
         self.friction = Vector2(-abs(friction[0]), -abs(friction[1]))
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
-        self.default_acceleration_delta = Vector2(default_acceleration_delta) if not None else Vector2(constant_acceleration_delta)
+        if default_acceleration_delta is not None:
+            self.default_acceleration_delta = Vector2(default_acceleration_delta)
+        else:
+            self.default_acceleration_delta = Vector2(constant_acceleration_delta)
 
         ratios_made_negative_or_zero = [-abs(ratio) for ratio in bounce_velocity_ratios]
         self.bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
