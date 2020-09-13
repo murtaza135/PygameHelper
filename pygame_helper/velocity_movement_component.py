@@ -3,43 +3,29 @@ from pygame.math import Vector2
 from rotator2 import Rotator2
 from positional_rect import PositionalRect
 from keybinder import Keybinder
-from movement_component import MovementComponent
+from abstract_movement_component import AbstractMovementComponent
 from utilities import WHTuple, XYTuple, NESWTuple
 import math
 from velocity_input_component import VelocityInputComponent
 from velocity_collision_component import VelocityCollisionComponent
 
 
-class VelocityMovementComponent(MovementComponent):
+class VelocityMovementComponent(AbstractMovementComponent):
     
     def __init__(self, parent, rect, constant_velocity_delta, default_position=(0, 0), 
-                default_velocity_delta=(0, 0), default_rotation=0, window_size=(800, 600), should_bounce=(False, False, False, False),
-                should_wrap_screen=(True, True), movement_type="eight_way_movement",
-                direction_control="direction_and_magnitude", direction_control_y=None):
-        self.parent = parent
-        self.rect = rect
-        self.rect.center = (default_position[0], default_position[1])
-        self.window_size = WHTuple(*window_size)
+                default_rotation=0, default_velocity_delta=None, window_size=(800, 600),
+                should_wrap_screen=(True, True), should_bounce=(False, False, False, False),
+                movement_type="eight_way_movement", direction_control="direction_and_magnitude",
+                direction_control_y=None):
 
-        self.position = PositionalRect(self.rect)
-        self.velocity = Vector2()
+        super().__init__(parent, rect, default_position, default_rotation, window_size, should_wrap_screen)
         self.constant_velocity_delta = Vector2(constant_velocity_delta)
-        self.default_velocity_delta = Vector2(default_velocity_delta)
-        self.rotation = Rotator2(default_rotation)
-
+        self.default_velocity_delta = Vector2(default_velocity_delta) if not None else Vector2(constant_velocity_delta)
         self.should_bounce = NESWTuple(*should_bounce)
-        self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
         self.keybinder = Keybinder("right", "left", "down", "up")
         self.movement_input = VelocityInputComponent(self, self.keybinder, movement_type, direction_control, direction_control_y)
         self.collision = VelocityCollisionComponent(self)
-
-    @property
-    def frametime(self):
-        frametime_ms = self.parent.game_mode.game.clock.get_time()
-        frametime_seconds = frametime_ms / 1000
-        return frametime_seconds
-
 
     def move(self):
         self._reset_velocity()
@@ -75,7 +61,6 @@ class VelocityMovementComponent(MovementComponent):
             self._move_y_back_if_collided(sprite_collided)
             self._apply_bounce_y(sprite_collided)
 
-
     def _reset_velocity(self):
         self.velocity.x = self.constant_velocity_delta.x
         self.velocity.y = self.constant_velocity_delta.y
@@ -91,18 +76,6 @@ class VelocityMovementComponent(MovementComponent):
         if self.should_wrap_screen.y:
             self._wrap_around_screen_y()
         self.rect.centery = self.position.centery
-
-    def _wrap_around_screen_x(self):
-        if self.position.centerx > self.window_size.width:
-            self.position.centerx = 0
-        elif self.position.centerx < 0:
-            self.position.centerx = self.window_size.width
-
-    def _wrap_around_screen_y(self):
-        if self.position.centery > self.window_size.height:
-            self.position.centery = 0
-        elif self.position.centery < 0:
-            self.position.centery = self.window_size.height
 
     def _move_x_back_if_collided(self, sprite_collided):
         if sprite_collided is not None:

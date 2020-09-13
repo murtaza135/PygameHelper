@@ -1,9 +1,7 @@
 import pygame
 from pygame.math import Vector2
-from rotator2 import Rotator2
-from positional_rect import PositionalRect
 from keybinder import Keybinder
-from movement_component import MovementComponent
+from abstract_movement_component import AbstractMovementComponent
 from acceleration_input_component import AccelerationInputComponent
 from acceleration_collision_component import AccelerationCollisionComponent
 from utilities import WHTuple, XYTuple, NESWTuple
@@ -15,39 +13,26 @@ from utilities import WHTuple, XYTuple, NESWTuple
 # TODO add ability to jump from all 4 sides
 
 
-class AccelerationMovementComponent(MovementComponent):
+class AccelerationMovementComponent(AbstractMovementComponent):
 
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0),
-                default_acceleration_delta=(0, 0), default_rotation=0, window_size=(800, 600),
+                default_rotation=0, default_acceleration_delta=None, window_size=(800, 600),
                 should_wrap_screen=(True, True), bounce_velocity_ratios=(0, 0, 0, 0),
-                movement_type="eight_way_movement", direction_control="direction_and_magnitude", direction_control_y=None):
-        self.parent = parent
-        self.rect = rect
-        self.rect.center = (default_position[0], default_position[1])
-        self.window_size = WHTuple(*window_size)
+                movement_type="eight_way_movement", direction_control="direction_and_magnitude",
+                direction_control_y=None):
 
-        self.position = PositionalRect(self.rect)
-        self.velocity = Vector2()
+        super().__init__(parent, rect, default_position, default_rotation, window_size, should_wrap_screen)
         self.acceleration = Vector2()
         self.friction = Vector2(-abs(friction[0]), -abs(friction[1]))
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
-        self.default_acceleration_delta = Vector2(default_acceleration_delta)
-        self.rotation = Rotator2(default_rotation)
+        self.default_acceleration_delta = Vector2(default_acceleration_delta) if not None else Vector2(constant_acceleration_delta)
 
         ratios_made_negative_or_zero = [-abs(ratio) for ratio in bounce_velocity_ratios]
         self.bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
-        self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
         self.keybinder = Keybinder("right", "left", "down", "up", "jump")
         self.movement_input = AccelerationInputComponent(self, self.keybinder, movement_type, direction_control, direction_control_y)
         self.collision = AccelerationCollisionComponent(self)
-
-    @property
-    def frametime(self):
-        frametime_ms = self.parent.game_mode.game.clock.get_time()
-        frametime_seconds = frametime_ms / 1000
-        return frametime_seconds
-
 
     def move(self):
         self._reset_acceleration()
@@ -83,7 +68,6 @@ class AccelerationMovementComponent(MovementComponent):
             self._move_y_back_if_collided(sprite_collided)
             self._apply_bounce_or_jump_y(sprite_collided)
 
-
     def _reset_acceleration(self):
         self.acceleration.x = self.constant_acceleration_delta.x
         self.acceleration.y = self.constant_acceleration_delta.y
@@ -103,18 +87,6 @@ class AccelerationMovementComponent(MovementComponent):
         if self.should_wrap_screen.y:
             self._wrap_around_screen_y()
         self.rect.centery = self.position.centery
-
-    def _wrap_around_screen_x(self):
-        if self.position.centerx > self.window_size.width:
-            self.position.centerx = 0
-        elif self.position.centerx < 0:
-            self.position.centerx = self.window_size.width
-
-    def _wrap_around_screen_y(self):
-        if self.position.centery > self.window_size.height:
-            self.position.centery = 0
-        elif self.position.centery < 0:
-            self.position.centery = self.window_size.height
 
     def _move_x_back_if_collided(self, sprite_collided):
         if sprite_collided is not None:

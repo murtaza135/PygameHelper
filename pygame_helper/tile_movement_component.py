@@ -3,46 +3,37 @@ from pygame.math import Vector2
 from pygame_helper import Rotator2
 from positional_rect import PositionalRect
 from keybinder import Keybinder
-from movement_component import MovementComponent
+from abstract_movement_component import AbstractMovementComponent
 from utilities import WHTuple, XYTuple, NESWTuple
 import math
 from tile_input_component import TileInputComponent
 from tile_collision_component import TileCollisionComponent
 
 
-class TileMovementComponent(MovementComponent):
+class TileMovementComponent(AbstractMovementComponent):
     
-    def __init__(self, parent, rect, tile_geometry, constant_velocity_delta, default_position=(0, 0), 
-                default_velocity_delta=(0, 0), default_rotation=0, window_size=(800, 600), should_bounce=(False, False, False, False),
-                should_wrap_screen=(True, True), movement_type="eight_way_movement",
-                direction_control="direction_and_magnitude", direction_control_y=None):
-        self.parent = parent
-        self.tile_geometry = WHTuple(*tile_geometry)
-        self.window_size = WHTuple(*window_size)
-        self.rect = rect
-        self.rect.x = default_position[0] * self.tile_geometry.width
-        self.rect.y = default_position[1] * self.tile_geometry.height
+    def __init__(self, parent, rect, constant_velocity_delta, tile_geometry, default_position=(0, 0), 
+                default_rotation=0, default_velocity_delta=None, window_size=(800, 600),
+                should_wrap_screen=(True, True), should_bounce=(False, False, False, False),
+                movement_type="eight_way_movement", direction_control="direction_and_magnitude",
+                direction_control_y=None):
 
-        self.position = PositionalRect(self.rect)
-        self.velocity = Vector2()
+        self.tile_geometry = WHTuple(*tile_geometry)
+        default_position = (default_position[0] * self.tile_geometry.width, default_position[1] * self.tile_geometry.height)
+        super().__init__(parent, rect, default_position, default_rotation, window_size, should_wrap_screen)
+
         self.constant_velocity_delta = Vector2()
         self.set_tile_constant_velocity_delta(constant_velocity_delta)
         self.default_velocity_delta = Vector2()
-        self.set_tile_default_velocity_delta(default_velocity_delta)
-        self.rotation = Rotator2(default_rotation)
-
+        if default_velocity_delta is not None:
+            self.set_tile_default_velocity_delta(default_velocity_delta)
+        else:
+            self.set_tile_default_velocity_delta(constant_velocity_delta)
         self.should_bounce = NESWTuple(*should_bounce)
-        self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
         self.keybinder = Keybinder("right", "left", "down", "up")
         self.movement_input = TileInputComponent(self, self.keybinder, movement_type, direction_control, direction_control_y)
         self.collision = TileCollisionComponent(self)
-
-    @property
-    def frametime(self):
-        frametime_ms = self.parent.game_mode.game.clock.get_time()
-        frametime_seconds = frametime_ms / 1000
-        return frametime_seconds
 
     def get_tile_position(self):
         return Vector2(
@@ -137,12 +128,14 @@ class TileMovementComponent(MovementComponent):
         self.rect.y = math.floor(self.position.y / self.tile_geometry.height) * self.tile_geometry.height
 
     def _wrap_around_screen_x(self):
+        # overrides AbstractMovementComponent which compares self.position.CENTERX
         if self.position.x >= self.window_size.width:
             self.position.x = 0
         elif self.position.x < 0:
             self.position.x = self.window_size.width
 
     def _wrap_around_screen_y(self):
+        # overrides AbstractMovementComponent which compares self.position.CENTERY
         if self.position.y >= self.window_size.height:
             self.position.y = 0
         elif self.position.y < 0:
