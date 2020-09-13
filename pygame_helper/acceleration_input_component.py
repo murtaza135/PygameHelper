@@ -13,6 +13,7 @@ class AccelerationInputComponent(InputComponent):
     DIRECTION_ONLY = "direction_only"
     DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
     
+    
     def __init__(self, movement_component, keybinder, movement_type, direction_control, direction_control_y=None):
         self.movement = movement_component
         self.parent_sprite = self.movement.parent
@@ -28,6 +29,7 @@ class AccelerationInputComponent(InputComponent):
         if self.movement_type == AccelerationInputComponent.EIGHT_WAY_MOVEMENT:
             if self.direction_control_y is None:
                 raise ValueError("direction_control_y cannot be None if Eight Way Movement is used")
+
 
     def set_jump_velocity_if_key_pressed(self):
         if self.keybinder.is_key_pressed_for_option("jump"):
