@@ -30,13 +30,13 @@ class VelocityMovementComponent(MovementComponent):
         self.should_bounce = NESWTuple(*should_bounce)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
-        self._keybinds = Keybinder("right", "left", "down", "up")
-        self._movement_input = VelocityInputComponent(self, self._keybinds, movement_type, direction_control, direction_control_y)
+        self._keybinder = Keybinder("right", "left", "down", "up")
+        self._movement_input = VelocityInputComponent(self, self._keybinder, movement_type, direction_control, direction_control_y)
         self._collision = VelocityCollisionComponent(self)
 
     @property
     def keybinds(self):
-        return self._keybinds
+        return self._keybinder
 
     @property
     def movement_input(self):

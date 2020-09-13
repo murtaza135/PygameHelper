@@ -1,5 +1,6 @@
 import pygame
 from pygame.math import Vector2
+from pygame_helper import Rotator2
 from positional_rect import PositionalRect
 from keybinder import Keybinder
 from movement_component import MovementComponent
@@ -8,14 +9,6 @@ import math
 
 
 class TileMovementComponent(MovementComponent):
-    
-    ### movement_type ###
-    FOUR_WAY_MOVEMENT = "four_way_movement"
-    EIGHT_WAY_MOVEMENT = "eight_way_movement"
-
-    ### direction_control ###
-    DIRECTION_ONLY = "direction_only"
-    DIRECTION_AND_MAGNITUDE = "direction_and_magnitude"
     
     def __init__(self, parent, rect, tile_geometry, constant_velocity_delta, default_position=(0, 0), 
                 default_velocity_delta=(0, 0), default_rotation=0, window_size=(800, 600), should_bounce=(False, False, False, False),
@@ -28,16 +21,15 @@ class TileMovementComponent(MovementComponent):
         self.rect.x = default_position[0] * self.tile_geometry.width
         self.rect.y = default_position[1] * self.tile_geometry.height
 
-        self._position = PositionalRect(self.rect)
-        self._velocity = Vector2()
-        self._constant_velocity_delta = Vector2(constant_velocity_delta)
-        self._constant_velocity_delta.x *= self.tile_geometry.width
-        self._constant_velocity_delta.y *= self.tile_geometry.height
-        self._default_velocity_delta = Vector2(default_velocity_delta)
-        self._default_velocity_delta.x *= self.tile_geometry.width
-        self._default_velocity_delta.y *= self.tile_geometry.height
+        self.position = PositionalRect(self.rect)
+        self.velocity = Vector2()
+        self.constant_velocity_delta = Vector2()
+        self.set_tile_constant_velocity_delta(constant_velocity_delta)
+        self.default_velocity_delta = Vector2()
+        self.set_tile_default_velocity_delta(default_velocity_delta)
+        self.rotation = Rotator2(default_rotation)
 
-        self._keybinds = Keybinder("right", "left", "down", "up")
+        self._keybinder = Keybinder("right", "left", "down", "up")
 
         self.should_bounce = NESWTuple(*should_bounce)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
@@ -47,7 +39,7 @@ class TileMovementComponent(MovementComponent):
 
     @property
     def keybinds(self):
-        return self._keybinds
+        return self._keybinder
 
     @property
     def frametime(self):
@@ -55,19 +47,47 @@ class TileMovementComponent(MovementComponent):
         frametime_seconds = frametime_ms / 1000
         return frametime_seconds
 
-    @property
-    def position(self):
+    def get_tile_position(self):
         return Vector2(
-            math.floor(self._position.x / self.tile_geometry.width),
-            math.floor(self._position.y / self.tile_geometry.height)
+            math.floor(self.position.x / self.tile_geometry.width),
+            math.floor(self.position.y / self.tile_geometry.height)
         )
 
-    @property
-    def velocity(self):
+    def set_tile_position(self, position):
+        self.position.x = position[0] * self.tile_geometry.width
+        self.position.y = position[1] * self.tile_geometry.height
+        self.rect.x = position[0] * self.tile_geometry.width
+        self.rect.y = position[1] * self.tile_geometry.height
+
+    def get_tile_velocity(self):
         return Vector2(
-            self._velocity.x / self.tile_geometry.width,
-            self._velocity.y / self.tile_geometry.height
+            self.velocity.x / self.tile_geometry.width,
+            self.velocity.y / self.tile_geometry.height
         )
+
+    def set_tile_velocity(self, velocity):
+        self.velocity.x = velocity[0] * self.tile_geometry.width
+        self.velocity.y = velocity[1] * self.tile_geometry.height
+
+    def get_tile_constant_velocity_delta(self):
+        return Vector2(
+            self.constant_velocity_delta.x / self.tile_geometry.width,
+            self.constant_velocity_delta.y / self.tile_geometry.height
+        )
+
+    def set_tile_constant_velocity_delta(self, constant_velocity_delta):
+        self.constant_velocity_delta.x = constant_velocity_delta[0] * self.tile_geometry.width
+        self.constant_velocity_delta.y = constant_velocity_delta[1] * self.tile_geometry.height
+
+    def get_tile_default_velocity_delta(self):
+        return Vector2(
+            self.default_velocity_delta.x / self.tile_geometry.width,
+            self.default_velocity_delta.y / self.tile_geometry.height
+        )
+
+    def set_tile_default_velocity_delta(self, default_velocity_delta):
+        self.default_velocity_delta.x = default_velocity_delta[0] * self.tile_geometry.width
+        self.default_velocity_delta.y = default_velocity_delta[1] * self.tile_geometry.height
 
 
     def move(self):
@@ -124,111 +144,111 @@ class TileMovementComponent(MovementComponent):
             self._set_velocity_to_maximum_in_eight_way_movement()
 
     def _set_velocity_to_maximum_in_eight_way_movement(self):
-        if self._velocity.x != 0 and self._velocity.y != 0:
-            self._velocity.x *= math.cos(math.pi / 4)
-            self._velocity.y *= math.sin(math.pi / 4)
+        if self.velocity.x != 0 and self.velocity.y != 0:
+            self.velocity.x *= math.cos(math.pi / 4)
+            self.velocity.y *= math.sin(math.pi / 4)
 
     def _apply_velocity_in_one_direction_only(self):
         self.keybinds.track_keys_for_multiple_options("right", "left", "up", "down")
         self.keybinds.update_pressed_keys_order()
 
         if self.keybinds.is_key_most_recently_pressed_for_option("left"):
-            self._velocity.x -= self.keybinds.get_value_for_option("left") * self.tile_geometry.width
-            self._velocity.y = 0
+            self.velocity.x -= self.keybinds.get_value_for_option("left") * self.tile_geometry.width
+            self.velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("right"):
-            self._velocity.x += self.keybinds.get_value_for_option("right") * self.tile_geometry.width
-            self._velocity.y = 0
+            self.velocity.x += self.keybinds.get_value_for_option("right") * self.tile_geometry.width
+            self.velocity.y = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("up"):
-            self._velocity.y -= self.keybinds.get_value_for_option("up") * self.tile_geometry.height
-            self._velocity.x = 0
+            self.velocity.y -= self.keybinds.get_value_for_option("up") * self.tile_geometry.height
+            self.velocity.x = 0
         if self.keybinds.is_key_most_recently_pressed_for_option("down"):
-            self._velocity.y += self.keybinds.get_value_for_option("down") * self.tile_geometry.height
-            self._velocity.x = 0
+            self.velocity.y += self.keybinds.get_value_for_option("down") * self.tile_geometry.height
+            self.velocity.x = 0
 
     def _change_absolute_direction(self):
         if self.keybinds.is_key_pressed_for_option("left"):
-            self._constant_velocity_delta.x = -abs(self._default_velocity_delta.x)
-            self._constant_velocity_delta.y = 0
-            self._velocity.y = 0
+            self.constant_velocity_delta.x = -abs(self.default_velocity_delta.x)
+            self.constant_velocity_delta.y = 0
+            self.velocity.y = 0
         elif self.keybinds.is_key_pressed_for_option("right"):
-            self._constant_velocity_delta.x = abs(self._default_velocity_delta.x)
-            self._constant_velocity_delta.y = 0
-            self._velocity.y = 0
+            self.constant_velocity_delta.x = abs(self.default_velocity_delta.x)
+            self.constant_velocity_delta.y = 0
+            self.velocity.y = 0
         elif self.keybinds.is_key_pressed_for_option("up"):
-            self._constant_velocity_delta.x = 0
-            self._constant_velocity_delta.y = -abs(self._default_velocity_delta.y)
-            self._velocity.x = 0
+            self.constant_velocity_delta.x = 0
+            self.constant_velocity_delta.y = -abs(self.default_velocity_delta.y)
+            self.velocity.x = 0
         elif self.keybinds.is_key_pressed_for_option("down"):
-            self._constant_velocity_delta.x = 0
-            self._constant_velocity_delta.y = abs(self._default_velocity_delta.y)
-            self._velocity.x = 0
+            self.constant_velocity_delta.x = 0
+            self.constant_velocity_delta.y = abs(self.default_velocity_delta.y)
+            self.velocity.x = 0
 
     def _apply_velocity_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
-            self._velocity.x -= self.keybinds.get_value_for_option("left") * self.tile_geometry.width
+            self.velocity.x -= self.keybinds.get_value_for_option("left") * self.tile_geometry.width
         if self.keybinds.is_key_pressed_for_option("right"):
-            self._velocity.x += self.keybinds.get_value_for_option("right") * self.tile_geometry.width
+            self.velocity.x += self.keybinds.get_value_for_option("right") * self.tile_geometry.width
 
     def _change_direction_x(self):
         if self.keybinds.is_key_pressed_for_option("left"):
-            self._constant_velocity_delta.x = -abs(self._constant_velocity_delta.x)
+            self.constant_velocity_delta.x = -abs(self.constant_velocity_delta.x)
         elif self.keybinds.is_key_pressed_for_option("right"):
-            self._constant_velocity_delta.x = abs(self._constant_velocity_delta.x)
-        self._velocity.x = self._constant_velocity_delta.x
+            self.constant_velocity_delta.x = abs(self.constant_velocity_delta.x)
+        self.velocity.x = self.constant_velocity_delta.x
 
     def _apply_velocity_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
-            self._velocity.y -= self.keybinds.get_value_for_option("up") * self.tile_geometry.height
+            self.velocity.y -= self.keybinds.get_value_for_option("up") * self.tile_geometry.height
         if self.keybinds.is_key_pressed_for_option("down"):
-            self._velocity.y += self.keybinds.get_value_for_option("down") * self.tile_geometry.height
+            self.velocity.y += self.keybinds.get_value_for_option("down") * self.tile_geometry.height
 
     def _change_direction_y(self):
         if self.keybinds.is_key_pressed_for_option("up"):
-            self._constant_velocity_delta.y = -abs(self._constant_velocity_delta.y)
+            self.constant_velocity_delta.y = -abs(self.constant_velocity_delta.y)
         elif self.keybinds.is_key_pressed_for_option("down"):
-            self._constant_velocity_delta.y = abs(self._constant_velocity_delta.y)
-        self._velocity.y = self._constant_velocity_delta.y
+            self.constant_velocity_delta.y = abs(self.constant_velocity_delta.y)
+        self.velocity.y = self.constant_velocity_delta.y
 
     
     def _reset_velocity(self):
-        self._velocity.x = self._constant_velocity_delta.x
-        self._velocity.y = self._constant_velocity_delta.y
+        self.velocity.x = self.constant_velocity_delta.x
+        self.velocity.y = self.constant_velocity_delta.y
 
     def _set_new_physics_state_and_transform_x(self):
-        self._position.x += self._velocity.x * self.frametime
+        self.position.x += self.velocity.x * self.frametime
         if self.should_wrap_screen.x:
             self._wrap_around_screen_x()
-        self.rect.x = math.floor(self._position.x / self.tile_geometry.width) * self.tile_geometry.width
+        self.rect.x = math.floor(self.position.x / self.tile_geometry.width) * self.tile_geometry.width
 
     def _set_new_physics_state_and_transform_y(self):
-        self._position.y += self._velocity.y * self.frametime
+        self.position.y += self.velocity.y * self.frametime
         if self.should_wrap_screen.y:
             self._wrap_around_screen_y()
-        self.rect.y = math.floor(self._position.y / self.tile_geometry.height) * self.tile_geometry.height
+        self.rect.y = math.floor(self.position.y / self.tile_geometry.height) * self.tile_geometry.height
 
     def _wrap_around_screen_x(self):
-        if self._position.x >= self.window_size.width:
-            self._position.x = 0
-        elif self._position.x < 0:
-            self._position.x = self.window_size.width
+        if self.position.x >= self.window_size.width:
+            self.position.x = 0
+        elif self.position.x < 0:
+            self.position.x = self.window_size.width
 
     def _wrap_around_screen_y(self):
-        if self._position.y >= self.window_size.height:
-            self._position.y = 0
-        elif self._position.y < 0:
-            self._position.y = self.window_size.height
+        if self.position.y >= self.window_size.height:
+            self.position.y = 0
+        elif self.position.y < 0:
+            self.position.y = self.window_size.height
 
     def _apply_bounce_x(self, sprite_collided):
         if sprite_collided["side"] == "right" and self.should_bounce.east:
-            self._constant_velocity_delta.x *= -1
+            self.constant_velocity_delta.x *= -1
         elif sprite_collided["side"] == "left" and self.should_bounce.west:
-            self._constant_velocity_delta.x *= -1
+            self.constant_velocity_delta.x *= -1
 
     def _apply_bounce_y(self, sprite_collided):
         if sprite_collided["side"] == "top" and self.should_bounce.north:
-            self._constant_velocity_delta.y *= -1
+            self.constant_velocity_delta.y *= -1
         elif sprite_collided["side"] == "bottom" and self.should_bounce.south:
-            self._constant_velocity_delta.y *= -1
+            self.constant_velocity_delta.y *= -1
 
 
     def get_x_collision(self, group, dokill=False, collide_callback=None):
@@ -239,7 +259,7 @@ class TileMovementComponent(MovementComponent):
             return self.get_collision_left(group, dokill, collide_callback)
 
     def get_collision_right(self, group, dokill=False, collide_callback=None):
-        if self._velocity.x > 0:
+        if self.velocity.x > 0:
             self.rect.x += self.tile_geometry.width
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             self.rect.x -= self.tile_geometry.width
@@ -248,7 +268,7 @@ class TileMovementComponent(MovementComponent):
         return None
 
     def get_collision_left(self, group, dokill=False, collide_callback=None):
-        if self._velocity.x < 0:
+        if self.velocity.x < 0:
             self.rect.x -= self.tile_geometry.width
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             self.rect.x += self.tile_geometry.width
@@ -264,7 +284,7 @@ class TileMovementComponent(MovementComponent):
             return self.get_collision_top(group, dokill, collide_callback)
 
     def get_collision_bottom(self, group, dokill=False, collide_callback=None):
-        if self._velocity.y > 0:
+        if self.velocity.y > 0:
             self.rect.y += self.tile_geometry.height
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             self.rect.y -= self.tile_geometry.height
@@ -273,7 +293,7 @@ class TileMovementComponent(MovementComponent):
         return None
 
     def get_collision_top(self, group, dokill=False, collide_callback=None):
-        if self._velocity.y < 0:
+        if self.velocity.y < 0:
             self.rect.y -= self.tile_geometry.height
             sprites_collided = pygame.sprite.spritecollide(self.parent, group, dokill, collide_callback)
             self.rect.y += self.tile_geometry.height
@@ -282,7 +302,7 @@ class TileMovementComponent(MovementComponent):
         return None
 
     def spritecollide(self, group):
-        return [sprite for sprite in group if self._position.colliderect(sprite.rect)]
+        return [sprite for sprite in group if self.position.colliderect(sprite.rect)]
 
     @staticmethod
     def collide_positional_rect(sprite_one, sprite_two):
