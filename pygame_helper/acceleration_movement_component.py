@@ -38,21 +38,9 @@ class AccelerationMovementComponent(MovementComponent):
         self.bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
-        self._keybinder = Keybinder("right", "left", "down", "up", "jump")
-        self._movement_input = AccelerationInputComponent(self, self._keybinder, movement_type, direction_control, direction_control_y)
-        self._collision = AccelerationCollisionComponent(self)
-
-    @property
-    def keybinds(self):
-        return self._keybinder
-
-    @property
-    def movement_input(self):
-        return self._movement_input
-
-    @property
-    def collision(self):
-        return self._collision
+        self.keybinder = Keybinder("right", "left", "down", "up", "jump")
+        self.movement_input = AccelerationInputComponent(self, self.keybinder, movement_type, direction_control, direction_control_y)
+        self.collision = AccelerationCollisionComponent(self)
 
     @property
     def frametime(self):
@@ -63,13 +51,13 @@ class AccelerationMovementComponent(MovementComponent):
 
     def move(self):
         self._reset_acceleration()
-        self._movement_input.process_movement_input()
+        self.movement_input.process_movement_input()
         self._set_new_physics_state_and_transform_x()
         self._set_new_physics_state_and_transform_y()
 
     def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collide_callback=None):
         self._reset_acceleration()
-        self._movement_input.process_movement_input()
+        self.movement_input.process_movement_input()
         self._move_x_with_collision(collide_fn_x, group, dokill, collide_callback)
         self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
 
@@ -155,4 +143,4 @@ class AccelerationMovementComponent(MovementComponent):
             self.velocity.y *= self.bounce_velocity_ratios.north
         elif sprite_collided["side"] == "bottom":
             self.velocity.y *= self.bounce_velocity_ratios.south
-            self._movement_input.set_jump_velocity_if_key_pressed()
+            self.movement_input.set_jump_velocity_if_key_pressed()

@@ -30,21 +30,9 @@ class VelocityMovementComponent(MovementComponent):
         self.should_bounce = NESWTuple(*should_bounce)
         self.should_wrap_screen = XYTuple(*should_wrap_screen)
 
-        self._keybinder = Keybinder("right", "left", "down", "up")
-        self._movement_input = VelocityInputComponent(self, self._keybinder, movement_type, direction_control, direction_control_y)
-        self._collision = VelocityCollisionComponent(self)
-
-    @property
-    def keybinds(self):
-        return self._keybinder
-
-    @property
-    def movement_input(self):
-        return self._movement_input
-
-    @property
-    def collision(self):
-        return self._collision
+        self.keybinder = Keybinder("right", "left", "down", "up")
+        self.movement_input = VelocityInputComponent(self, self.keybinder, movement_type, direction_control, direction_control_y)
+        self.collision = VelocityCollisionComponent(self)
 
     @property
     def frametime(self):
@@ -55,13 +43,13 @@ class VelocityMovementComponent(MovementComponent):
 
     def move(self):
         self._reset_velocity()
-        self._movement_input.process_movement_input()
+        self.movement_input.process_movement_input()
         self._set_new_physics_state_and_transform_x()
         self._set_new_physics_state_and_transform_y()
 
     def move_with_collision(self, collide_fn_x, collide_fn_y, group, dokill=None, collide_callback=None):
         self._reset_velocity()
-        self._movement_input.process_movement_input()
+        self.movement_input.process_movement_input()
         self._move_x_with_collision(collide_fn_x, group, dokill, collide_callback)
         self._move_y_with_collision(collide_fn_y, group, dokill, collide_callback)
 
