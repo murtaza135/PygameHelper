@@ -110,5 +110,11 @@ class VelocityMovementComponent(AbstractMovementComponent):
 
     def ensure_velocity_does_not_exceed_maximum(self):
         if self.velocity.x != 0 and self.velocity.y != 0:
-            self.velocity.x *= math.cos(math.pi / 4)
-            self.velocity.y *= math.sin(math.pi / 4)
+            if abs(self.velocity.x) > abs(self.velocity.y):
+                bigger_velocity = abs(self.velocity.x)
+            else:
+                bigger_velocity = abs(self.velocity.y)
+
+            constant_which_x_and_y_are_multiplied_by = bigger_velocity / (math.sqrt(self.velocity.x**2 + self.velocity.y**2))
+            self.velocity.x *= constant_which_x_and_y_are_multiplied_by
+            self.velocity.y *= constant_which_x_and_y_are_multiplied_by

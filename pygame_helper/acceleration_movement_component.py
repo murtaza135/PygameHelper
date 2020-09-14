@@ -5,9 +5,9 @@ from abstract_movement_component import AbstractMovementComponent
 from acceleration_input_component import AccelerationInputComponent
 from acceleration_collision_component import AccelerationCollisionComponent
 from utilities import WHTuple, XYTuple, NESWTuple
+import math
 
 
-# TODO stop movement going faster than what it should be when both x and y movement is occuring
 # TODO add ability to jump from all 4 sides
 
 
