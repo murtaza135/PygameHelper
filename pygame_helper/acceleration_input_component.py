@@ -7,9 +7,21 @@ class AccelerationInputComponent(AbstractInputComponent):
     def __init__(self, movement_component, keybinder, movement_type, direction_control, direction_control_y=None):
         super().__init__(movement_component, keybinder, movement_type, direction_control, direction_control_y)
 
-    def set_jump_velocity_if_key_pressed(self):
+    def set_jump_velocity_leftwards_if_key_pressed(self):
+        if self.keybinder.is_key_pressed_for_option("jump"):
+            self.movement.velocity.x = -abs(self.keybinder.get_value_for_option("jump"))
+
+    def set_jump_velocity_rightwards_if_key_pressed(self):
+        if self.keybinder.is_key_pressed_for_option("jump"):
+            self.movement.velocity.x = abs(self.keybinder.get_value_for_option("jump"))
+
+    def set_jump_velocity_upwards_if_key_pressed(self):
         if self.keybinder.is_key_pressed_for_option("jump"):
             self.movement.velocity.y = -abs(self.keybinder.get_value_for_option("jump"))
+
+    def set_jump_velocity_downwards_if_key_pressed(self):
+        if self.keybinder.is_key_pressed_for_option("jump"):
+            self.movement.velocity.y = abs(self.keybinder.get_value_for_option("jump"))
 
     def process_movement_input(self):
         if self.movement_type == AbstractInputComponent.ROTATIONAL_MOVEMENT:

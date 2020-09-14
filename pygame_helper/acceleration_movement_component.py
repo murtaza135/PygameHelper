@@ -5,10 +5,6 @@ from abstract_movement_component import AbstractMovementComponent
 from acceleration_input_component import AccelerationInputComponent
 from acceleration_collision_component import AccelerationCollisionComponent
 from utilities import WHTuple, XYTuple, NESWTuple
-import math
-
-
-# TODO add ability to jump from all 4 sides
 
 
 class AccelerationMovementComponent(AbstractMovementComponent):
@@ -16,8 +12,8 @@ class AccelerationMovementComponent(AbstractMovementComponent):
     def __init__(self, parent, rect, constant_acceleration_delta, friction, default_position=(0, 0),
                 default_rotation=0, default_acceleration_delta=None, window_size=(800, 600),
                 should_wrap_screen=(True, True), bounce_velocity_ratios=(0, 0, 0, 0),
-                movement_type="eight_way_movement", direction_control="direction_and_magnitude",
-                direction_control_y=None):
+                sides_to_jump=(False, False, True, False), movement_type="eight_way_movement",
+                direction_control="direction_and_magnitude", direction_control_y=None):
 
         super().__init__(parent, rect, default_position, default_rotation, window_size, should_wrap_screen)
         self.acceleration = Vector2()
@@ -30,6 +26,7 @@ class AccelerationMovementComponent(AbstractMovementComponent):
 
         ratios_made_negative_or_zero = [-abs(ratio) for ratio in bounce_velocity_ratios]
         self.bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
+        self.sides_to_jump = NESWTuple(*sides_to_jump)
 
         self.keybinder = Keybinder("right", "left", "down", "up", "jump")
         self.movement_input = AccelerationInputComponent(self, self.keybinder, movement_type, direction_control, direction_control_y)
@@ -56,7 +53,8 @@ class AccelerationMovementComponent(AbstractMovementComponent):
 
         if sprite_collided is not None:
             self._move_x_back_if_collided(sprite_collided)
-            self._apply_bounce_or_jump_x(sprite_collided)
+            self._apply_bounce_x(sprite_collided)
+            self._apply_jump_x(sprite_collided)
 
     def _move_y_with_collision(self, collide_fn, group, dokill=None, collide_callback=None):
         self._set_new_physics_state_and_transform_y()
@@ -67,7 +65,8 @@ class AccelerationMovementComponent(AbstractMovementComponent):
 
         if sprite_collided is not None:
             self._move_y_back_if_collided(sprite_collided)
-            self._apply_bounce_or_jump_y(sprite_collided)
+            self._apply_bounce_y(sprite_collided)
+            self._apply_jump_y(sprite_collided)
 
     def _reset_acceleration(self):
         self.acceleration.x = self.constant_acceleration_delta.x
@@ -105,15 +104,26 @@ class AccelerationMovementComponent(AbstractMovementComponent):
                 self.position.top = sprite_collided["sprite"].rect.bottom
             self.rect.centery = self.position.centery
 
-    def _apply_bounce_or_jump_x(self, sprite_collided):
+    def _apply_bounce_x(self, sprite_collided):
         if sprite_collided["side"] == "right":
             self.velocity.x *= self.bounce_velocity_ratios.east
         elif sprite_collided["side"] == "left":
             self.velocity.x *= self.bounce_velocity_ratios.west
 
-    def _apply_bounce_or_jump_y(self, sprite_collided):
+    def _apply_bounce_y(self, sprite_collided):
         if sprite_collided["side"] == "top":
             self.velocity.y *= self.bounce_velocity_ratios.north
         elif sprite_collided["side"] == "bottom":
             self.velocity.y *= self.bounce_velocity_ratios.south
-            self.movement_input.set_jump_velocity_if_key_pressed()
+
+    def _apply_jump_x(self, sprite_collided):
+        if sprite_collided["side"] == "right" and self.sides_to_jump.east:
+            self.movement_input.set_jump_velocity_leftwards_if_key_pressed()
+        elif sprite_collided["side"] == "left" and self.sides_to_jump.west:
+            self.movement_input.set_jump_velocity_rightwards_if_key_pressed()
+
+    def _apply_jump_y(self, sprite_collided):
+        if sprite_collided["side"] == "top" and self.sides_to_jump.north:
+            self.movement_input.set_jump_velocity_downwards_if_key_pressed()
+        elif sprite_collided["side"] == "bottom" and self.sides_to_jump.south:
+            self.movement_input.set_jump_velocity_upwards_if_key_pressed()

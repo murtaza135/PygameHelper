@@ -1,13 +1,11 @@
 import pygame
 from pygame.math import Vector2
-from pygame_helper import Rotator2
-from positional_rect import PositionalRect
 from keybinder import Keybinder
 from abstract_movement_component import AbstractMovementComponent
-from utilities import WHTuple, XYTuple, NESWTuple
-import math
 from tile_input_component import TileInputComponent
 from tile_collision_component import TileCollisionComponent
+from utilities import WHTuple, XYTuple, NESWTuple
+import math
 
 
 class TileMovementComponent(AbstractMovementComponent):
