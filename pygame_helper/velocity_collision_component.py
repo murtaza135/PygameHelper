@@ -1,5 +1,5 @@
 import pygame
-from abstract_collision_component import AbstractCollisionComponent
+from pygame_helper.abstract_collision_component import AbstractCollisionComponent
 
 
 class VelocityCollisionComponent(AbstractCollisionComponent):

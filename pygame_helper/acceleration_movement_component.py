@@ -1,10 +1,10 @@
 import pygame
 from pygame.math import Vector2
-from keybinder import Keybinder
-from abstract_movement_component import AbstractMovementComponent
-from acceleration_input_component import AccelerationInputComponent
-from acceleration_collision_component import AccelerationCollisionComponent
-from utilities import WHTuple, XYTuple, NESWTuple
+from pygame_helper.keybinder import Keybinder
+from pygame_helper.abstract_movement_component import AbstractMovementComponent
+from pygame_helper.acceleration_input_component import AccelerationInputComponent
+from pygame_helper.acceleration_collision_component import AccelerationCollisionComponent
+from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
 
 
 class AccelerationMovementComponent(AbstractMovementComponent):

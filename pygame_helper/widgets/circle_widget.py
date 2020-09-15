@@ -1,5 +1,5 @@
 import pygame
-from base_widget import Widget
+from pygame_helper.widgets.base_widget import Widget
 
 
 class CircleWidget(Widget):

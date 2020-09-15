@@ -1,7 +1,7 @@
 from pygame.math import Vector2
 from multipledispatch import dispatch
 import math
-import exceptions
+import pygame_helper.exceptions as exceptions
 
 
 class Rotator2(object):

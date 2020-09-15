@@ -1,6 +1,6 @@
 import pygame
 from dotmap import DotMap
-from pygame_helper import exceptions
+import pygame_helper.exceptions as exceptions
 
 
 class WidgetLayout(pygame.Surface):

@@ -1,5 +1,5 @@
 import pygame
-from abstract_input_component import AbstractInputComponent
+from pygame_helper.abstract_input_component import AbstractInputComponent
 
 
 class VelocityInputComponent(AbstractInputComponent):

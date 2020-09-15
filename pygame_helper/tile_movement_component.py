@@ -1,10 +1,10 @@
 import pygame
 from pygame.math import Vector2
-from keybinder import Keybinder
-from abstract_movement_component import AbstractMovementComponent
-from tile_input_component import TileInputComponent
-from tile_collision_component import TileCollisionComponent
-from utilities import WHTuple, XYTuple, NESWTuple
+from pygame_helper.keybinder import Keybinder
+from pygame_helper.abstract_movement_component import AbstractMovementComponent
+from pygame_helper.tile_input_component import TileInputComponent
+from pygame_helper.tile_collision_component import TileCollisionComponent
+from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
 import math
 
 

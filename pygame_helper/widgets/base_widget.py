@@ -1,7 +1,7 @@
 import pygame
 from abc import ABC, abstractmethod
 import collections
-from pygame_helper import exceptions
+import pygame_helper.exceptions as exceptions
 
 
 class Widget(ABC):

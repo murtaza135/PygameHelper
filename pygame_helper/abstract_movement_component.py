@@ -1,8 +1,8 @@
 import pygame
 from pygame.math import Vector2
-from rotator2 import Rotator2
-from positional_rect import PositionalRect
-from utilities import WHTuple, XYTuple, NESWTuple
+from pygame_helper.rotator2 import Rotator2
+from pygame_helper.positional_rect import PositionalRect
+from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
 from abc import ABC, abstractmethod
 
 

@@ -1,5 +1,5 @@
 import pygame
-import exceptions
+import pygame_helper.exceptions as exceptions
 
 
 class PygameTimer(object):
