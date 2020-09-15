@@ -1,7 +1,3 @@
-# import os
-# import sys
-# sys.path.insert(-1, os.path.dirname(os.path.abspath(__file__)))
-
 from pygame_helper.widgets.base_widget import Widget
 from pygame_helper.widgets.text_widget import TextWidget
 from pygame_helper.widgets.progress_bar_widget import ProgressBarWidget

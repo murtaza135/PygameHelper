@@ -1,4 +1,4 @@
-from pygame_helper.abstract_input_component import AbstractInputComponent
+from pygame_helper.input.abstract_input_component import AbstractInputComponent
 
 
 class TileInputComponent(AbstractInputComponent):

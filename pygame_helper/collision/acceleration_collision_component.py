@@ -1,8 +1,8 @@
 import pygame
-from pygame_helper.abstract_collision_component import AbstractCollisionComponent
+from pygame_helper.collision.abstract_collision_component import AbstractCollisionComponent
 
 
-class VelocityCollisionComponent(AbstractCollisionComponent):
+class AccelerationCollisionComponent(AbstractCollisionComponent):
     
     def __init__(self, movement_component):
         super().__init__(movement_component)
@@ -11,7 +11,7 @@ class VelocityCollisionComponent(AbstractCollisionComponent):
         if collide_callback == None:
             collide_callback = AbstractCollisionComponent.collide_positional_rect
 
-        if self.movement.velocity.x > 0:
+        if self.movement.velocity.x > 0 or (self.movement.velocity.x == 0 and self.movement.acceleration.x > 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent_sprite, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "right"}
@@ -21,7 +21,7 @@ class VelocityCollisionComponent(AbstractCollisionComponent):
         if collide_callback == None:
             collide_callback = AbstractCollisionComponent.collide_positional_rect
 
-        if self.movement.velocity.x < 0:
+        if self.movement.velocity.x < 0 or (self.movement.velocity.x == 0 and self.movement.acceleration.x < 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent_sprite, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "left"}
@@ -31,7 +31,7 @@ class VelocityCollisionComponent(AbstractCollisionComponent):
         if collide_callback == None:
             collide_callback = AbstractCollisionComponent.collide_positional_rect
 
-        if self.movement.velocity.y > 0:
+        if self.movement.velocity.y > 0 or (self.movement.velocity.y == 0 and self.movement.acceleration.y > 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent_sprite, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "bottom"}
@@ -41,7 +41,7 @@ class VelocityCollisionComponent(AbstractCollisionComponent):
         if collide_callback == None:
             collide_callback = AbstractCollisionComponent.collide_positional_rect
 
-        if self.movement.velocity.y < 0:
+        if self.movement.velocity.y < 0 or (self.movement.velocity.y == 0 and self.movement.acceleration.y < 0):
             sprites_collided = pygame.sprite.spritecollide(self.parent_sprite, group, dokill, collide_callback)
             if sprites_collided:
                 return {"sprite": sprites_collided[0], "side": "top"}

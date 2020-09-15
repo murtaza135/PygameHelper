@@ -2,7 +2,7 @@ import pygame
 import pygame_helper.exceptions as exceptions
 
 
-class PygameTimer(object):
+class Timer(object):
     
     def __init__(self, delay_seconds):
         if not pygame.display.get_init():
