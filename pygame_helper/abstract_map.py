@@ -57,7 +57,7 @@ class AbstractMap(ABC):
 
     @abstractmethod
     def generate_map(self):
-        self.tile_objects.empty()
+        pass
 
     def render(self, window):
         window.blit(pygame.transform.scale(self.window, window.get_size()), (0, 0))
@@ -67,3 +67,7 @@ class AbstractMap(ABC):
             pygame.draw.line(self.window, colour, (x, 0), (x, self.window_geometry.height))
         for y in range(0, self.window_geometry.height, self.tile_geometry.height):
             pygame.draw.line(self.window, colour, (0, y), (self.window_geometry.width, y))
+
+    def delete_all_tile_objects(self):
+        for tile_object in self.tile_objects:
+            tile_object.kill()
