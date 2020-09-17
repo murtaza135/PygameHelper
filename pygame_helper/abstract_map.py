@@ -6,7 +6,7 @@ import json
 
 class AbstractMap(ABC):
     
-    def __init__(self, game_mode, map_path):
+    def __init__(self, game_mode, map_path, tile_geometry):
         self.game_mode = game_mode
         self.window = None
         self.tile_map = None
@@ -14,7 +14,7 @@ class AbstractMap(ABC):
         self.tile_objects = pygame.sprite.Group()
 
         self.num_tiles = None
-        self.tile_geometry = None
+        self.tile_geometry = WHTuple(*tile_geometry)
         self.window_geometry = None
 
         self._load_tile_map(map_path)
@@ -41,14 +41,12 @@ class AbstractMap(ABC):
     def _calculate_window_geometry(self):
         if self.tile_map is not None:
             self.num_tiles = XYTuple(x=len(self.tile_map[0]), y=len(self.tile_map))
-            self.tile_geometry = WHTuple(16, 16)
             self.window_geometry = WHTuple(
                 self.tile_geometry.width * self.num_tiles.x,
                 self.tile_geometry.height * self.num_tiles.y
             )
         else:
             self.num_tiles = None
-            self.tile_geometry = None
             self.window_geometry = None
 
     def _create_window_from_geometry(self):
@@ -59,7 +57,6 @@ class AbstractMap(ABC):
 
     @abstractmethod
     def generate_map(self):
-        self.game_mode.all_sprites.remove(self.tile_objects)
         self.tile_objects.empty()
 
     def render(self, window):
