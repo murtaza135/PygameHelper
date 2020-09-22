@@ -8,7 +8,7 @@ class Timer(object):
         if not pygame.display.get_init():
             raise exceptions.PygameInitError
         
-        self.time_started_seconds = None
+        self.time_started_seconds = 0
         self.delay_seconds = None
         self.set_new_delay(delay_seconds)
 
@@ -50,7 +50,7 @@ class Timer(object):
         return f"Time remaining: {time_remaining} seconds"
 
     def __setattr__(self, name, time_seconds):
-        if time_seconds is not None and time_seconds <= 0:
+        if time_seconds is not None and time_seconds < 0:
             raise ValueError("Must provide a valid delay time (in seconds)")
 
         super().__setattr__(name, time_seconds)
