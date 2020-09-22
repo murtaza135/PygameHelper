@@ -4,46 +4,57 @@ import pygame_helper.exceptions as exceptions
 
 class Timer(object):
     
-    def __init__(self, delay_seconds):
+    def __init__(self, countdown):
         if not pygame.display.get_init():
             raise exceptions.PygameInitError
         
-        self.time_started_seconds = 0
-        self.delay_seconds = None
-        self.set_new_delay(delay_seconds)
+        self._time_started_seconds = None
+        self._countdown = None
+        self.set_new_delay(countdown)
 
-    def set_new_delay(self, delay_seconds):
-        if delay_seconds <= 0:
+    def set_new_delay(self, countdown):
+        if countdown <= 0:
             raise ValueError("Must provide a valid delay time (in seconds)")
 
-        self.delay_seconds = float(delay_seconds)
+        self._countdown = float(countdown)
+
+    def _start_new_timer(self):
+        self._time_started_seconds = self.get_current_time()
+
+    def start(self):
+        if self.is_completed():
+            self._start_new_timer()
+
+    def reset(self):
+        if self.is_completed():
+            self._start_new_timer()
+
+    def force_reset(self):
+        self._start_new_timer()
 
     def is_running(self):
         return not self.is_completed()
 
     def is_completed(self):
         return (
-            self.time_started_seconds is None
-            or self.time_started_seconds + self.delay_seconds <= self.get_current_time()
+            self._time_started_seconds is None
+            or self._time_started_seconds + self._countdown <= self.get_current_time()
         )
 
     def get_current_time(self):
         return float(pygame.time.get_ticks() / 1000)
 
     def get_time_remaining(self):
-        if self.time_started_seconds is None:
+        if self._time_started_seconds is None:
             return float(0)
 
-        time_remaining_seconds = (self.time_started_seconds + self.delay_seconds) - self.get_current_time()
+        time_remaining_seconds = (self._time_started_seconds + self._countdown) - self.get_current_time()
         if time_remaining_seconds < 0:
             time_remaining_seconds = 0
         return time_remaining_seconds
 
-    def reset(self):
-        self.time_started_seconds = self.get_current_time()
-
     def __repr__(self):
-        return f"Timer(delay_seconds={self.delay_seconds})"
+        return f"Timer(countdown={self._countdown})"
 
     def __str__(self):
         time_remaining = round(self.get_time_remaining(), 5)
