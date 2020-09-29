@@ -70,7 +70,7 @@ class Timer(object):
 
 
     def __repr__(self):
-        return f"Timer(countdown={self._countdown}, set_timer_to_completed_when_reset={self._is_timer_completed_when_reset})"
+        return f"{self.__class__.__name__}(countdown={self._countdown}, set_timer_to_completed_when_reset={self._is_timer_completed_when_reset})"
 
     def __str__(self):
         time_remaining_seconds = round(self.time_remaining, 5)
