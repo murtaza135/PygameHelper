@@ -1,9 +1,9 @@
 import pygame
 from pygame.math import Vector2
+from pygame_helper.rotator2 import Rotator2
+from pygame_helper.positional_rect import PositionalRect
 from pygame_helper.input.keybinder import Keybinder
 from pygame_helper.movement.abstract_movement_component import AbstractMovementComponent
-from pygame_helper.input.tile_input_component import TileInputComponent
-from pygame_helper.collision.tile_collision_component import TileCollisionComponent
 from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
 import math
 
@@ -16,18 +16,27 @@ class TileMovementComponent(AbstractMovementComponent):
                 movement_type="eight_way_movement", direction_control="direction_and_magnitude",
                 direction_control_y="direction_and_magnitude"):
 
-        super().__init__(game_mode, parent_sprite, rect, movement_type, direction_control, direction_control_y,
-                        default_position, default_rotation, window_size, should_wrap_screen)
-
+        super().__init__(game_mode, parent_sprite, rect)
+        self.window_size = WHTuple(*window_size)
         self.tile_geometry = WHTuple(*tile_geometry)
+
+        self.position = PositionalRect(self.rect)
         self.tile_position = default_position
+        self.velocity = Vector2()
         self.constant_velocity_delta = Vector2()
         self.tile_constant_velocity_delta = constant_velocity_delta
         self._set_default_velocity_delta(constant_velocity_delta, default_velocity_delta)
-        self.should_bounce = NESWTuple(*should_bounce)
-        self.keybinder = Keybinder("right", "left", "down", "up")
+        self.rotation = Rotator2(default_rotation)
 
-        self.tiles_per_second = 12
+        self.movement_type = movement_type
+        self.direction_control = direction_control
+        self.direction_control_y = direction_control_y
+        self.check_direction_control_y_for_eight_way_movement()
+
+        self.should_bounce = NESWTuple(*should_bounce)
+        self.should_wrap_screen = XYTuple(*should_wrap_screen)
+
+        self.keybinder = Keybinder("right", "left", "down", "up")
 
     def _set_default_velocity_delta(self, constant_velocity_delta, default_velocity_delta):
         self.default_velocity_delta = Vector2()
@@ -36,17 +45,22 @@ class TileMovementComponent(AbstractMovementComponent):
         else:
             self.tile_default_velocity_delta = constant_velocity_delta
 
-    def set_pixel_position(self, position):
-        self.position.x = position.x
-        self.position.y = position.y
-        self.rect.x = math.floor(self.position.x / self.tile_geometry.width) * self.tile_geometry.width
-        self.rect.y = math.floor(self.position.y / self.tile_geometry.height) * self.tile_geometry.height
+    @property
+    def pixel_position(self):
+        return Vector2(self.position.x, self.position.y)
+
+    @pixel_position.setter
+    def pixel_position(self, position):
+        self.position.x = position[0]
+        self.position.y = position[1]
+        self.rect.x = (position[0] // self.tile_geometry.width) * self.tile_geometry.width
+        self.rect.y = (position[1] // self.tile_geometry.height) * self.tile_geometry.height
 
     @property
     def tile_position(self):
         return Vector2(
-            math.floor(self.position.x / self.tile_geometry.width),
-            math.floor(self.position.y / self.tile_geometry.height)
+            self.position.x // self.tile_geometry.width,
+            self.position.y // self.tile_geometry.height
         )
 
     @tile_position.setter
@@ -134,17 +148,19 @@ class TileMovementComponent(AbstractMovementComponent):
         self.position.x += self.velocity.x * self.frametime
         if self.should_wrap_screen.x:
             self.wrap_around_screen_x()
-        self.rect.x = math.floor(self.position.x / self.tile_geometry.width) * self.tile_geometry.width
+        self.rect.x = self.tile_position.x * self.tile_geometry.width
 
     def _set_new_physics_state_and_transform_y(self):
         self.position.y += self.velocity.y * self.frametime
         if self.should_wrap_screen.y:
             self.wrap_around_screen_y()
-        self.rect.y = math.floor(self.position.y / self.tile_geometry.height) * self.tile_geometry.height
+        self.rect.y = self.tile_position.y * self.tile_geometry.height
 
-    def set_pixel_position_to_tile_position(self):
-        pixel_position_converted_to_tile_position = self.tile_position
-        self.tile_position = pixel_position_converted_to_tile_position
+    def set_pixel_position_to_beginning_of_tile(self):
+        self.pixel_position = Vector2(
+            self.tile_position.x * self.tile_geometry.width,
+            self.tile_position.y * self.tile_geometry.height,
+        )
 
     def wrap_around_screen_x(self):
         # overrides AbstractMovementComponent which compares self.position.CENTERX

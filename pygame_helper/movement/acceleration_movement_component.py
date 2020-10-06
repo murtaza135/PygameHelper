@@ -1,5 +1,7 @@
 import pygame
 from pygame.math import Vector2
+from pygame_helper.rotator2 import Rotator2
+from pygame_helper.positional_rect import PositionalRect
 from pygame_helper.input.keybinder import Keybinder
 from pygame_helper.movement.abstract_movement_component import AbstractMovementComponent
 from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
@@ -13,17 +15,28 @@ class AccelerationMovementComponent(AbstractMovementComponent):
                 sides_to_jump=(False, False, True, False), movement_type="eight_way_movement",
                 direction_control="direction_and_magnitude", direction_control_y="direction_and_magnitude"):
 
-        super().__init__(game_mode, parent_sprite, rect, movement_type, direction_control, direction_control_y,
-                        default_position, default_rotation, window_size, should_wrap_screen)
+        super().__init__(game_mode, parent_sprite, rect)
+        self.rect.center = (default_position[0], default_position[1])
+        self.window_size = WHTuple(*window_size)
 
+        self.position = PositionalRect(self.rect)
+        self.velocity = Vector2()
         self.acceleration = Vector2()
         self.friction = Vector2(-abs(friction[0]), -abs(friction[1]))
         self.constant_acceleration_delta = Vector2(constant_acceleration_delta)
         self._set_default_acceleration_delta(constant_acceleration_delta, default_acceleration_delta)
+        self.rotation = Rotator2(default_rotation)
+
+        self.movement_type = movement_type
+        self.direction_control = direction_control
+        self.direction_control_y = direction_control_y
+        self.check_direction_control_y_for_eight_way_movement()
 
         ratios_made_negative_or_zero = [-abs(ratio) for ratio in bounce_velocity_ratios]
         self.bounce_velocity_ratios = NESWTuple(*ratios_made_negative_or_zero)
         self.sides_to_jump = NESWTuple(*sides_to_jump)
+        self.should_wrap_screen = XYTuple(*should_wrap_screen)
+
         self.keybinder = Keybinder("right", "left", "down", "up", "jump")
 
     def _set_default_acceleration_delta(self, constant_acceleration_delta, default_acceleration_delta):
@@ -89,6 +102,18 @@ class AccelerationMovementComponent(AbstractMovementComponent):
         if self.should_wrap_screen.y:
             self.wrap_around_screen_y()
         self.rect.centery = self.position.centery
+
+    def wrap_around_screen_x(self):
+        if self.position.centerx > self.window_size.width:
+            self.position.centerx = 0
+        elif self.position.centerx < 0:
+            self.position.centerx = self.window_size.width
+
+    def wrap_around_screen_y(self):
+        if self.position.centery > self.window_size.height:
+            self.position.centery = 0
+        elif self.position.centery < 0:
+            self.position.centery = self.window_size.height
 
     def _move_x_back_if_collided(self, sprite_collided):
         if sprite_collided is not None:
