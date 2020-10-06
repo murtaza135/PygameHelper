@@ -1,5 +1,0 @@
-from pygame_helper.input.keybinder import Keybinder
-from pygame_helper.input.abstract_input_component import AbstractInputComponent
-from pygame_helper.input.acceleration_input_component import AccelerationInputComponent
-from pygame_helper.input.velocity_input_component import VelocityInputComponent
-from pygame_helper.input.tile_input_component import TileInputComponent

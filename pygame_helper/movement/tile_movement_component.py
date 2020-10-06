@@ -2,7 +2,7 @@ import pygame
 from pygame.math import Vector2
 from pygame_helper.rotator2 import Rotator2
 from pygame_helper.positional_rect import PositionalRect
-from pygame_helper.input.keybinder import Keybinder
+from pygame_helper.keybinder import Keybinder
 from pygame_helper.movement.abstract_movement_component import AbstractMovementComponent
 from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
 import math
@@ -10,9 +10,10 @@ import math
 
 class TileMovementComponent(AbstractMovementComponent):
     
-    def __init__(self, game_mode, parent_sprite, rect, constant_velocity_delta, tile_geometry, default_position=(0, 0), 
-                default_rotation=0, default_velocity_delta=None, window_size=(800, 600),
-                should_wrap_screen=(True, True), should_bounce=(False, False, False, False),
+    def __init__(self, game_mode, parent_sprite, rect, constant_velocity_delta, tile_geometry,
+                default_position=(0, 0), default_rotation=0, default_velocity_delta=None,
+                window_size=(800, 600), should_wrap_screen=(True, True),
+                should_bounce=(False, False, False, False),
                 movement_type="eight_way_movement", direction_control="direction_and_magnitude",
                 direction_control_y="direction_and_magnitude"):
 

@@ -2,7 +2,7 @@ import pygame
 from pygame.math import Vector2
 from pygame_helper.rotator2 import Rotator2
 from pygame_helper.positional_rect import PositionalRect
-from pygame_helper.input.keybinder import Keybinder
+from pygame_helper.keybinder import Keybinder
 from pygame_helper.movement.abstract_movement_component import AbstractMovementComponent
 from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
 
