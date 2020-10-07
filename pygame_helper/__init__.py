@@ -7,3 +7,5 @@ from pygame_helper.abstract_map import AbstractMap
 import pygame_helper.exceptions
 import pygame_helper.widgets
 import pygame_helper.movement
+from pygame_helper.game_mode import GameMode
+from pygame_helper.game_mode import GameModeType

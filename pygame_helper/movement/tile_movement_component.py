@@ -8,6 +8,10 @@ from pygame_helper.utilities import WHTuple, XYTuple, NESWTuple
 import math
 
 
+# TODO possibly convert this to be dependant on the clock
+# and to use pygame.time.delay or pygame.time.wait
+
+
 class TileMovementComponent(AbstractMovementComponent):
     
     def __init__(self, game_mode, parent_sprite, rect, constant_velocity_delta, tile_geometry,
@@ -164,14 +168,12 @@ class TileMovementComponent(AbstractMovementComponent):
         )
 
     def wrap_around_screen_x(self):
-        # overrides AbstractMovementComponent which compares self.position.CENTERX
         if self.position.x >= self.window_size.width:
             self.position.x -= self.window_size.width
         elif self.position.x < 0:
             self.position.x += self.window_size.width
 
     def wrap_around_screen_y(self):
-        # overrides AbstractMovementComponent which compares self.position.CENTERY
         if self.position.y >= self.window_size.height:
             self.position.y -= self.window_size.height
         elif self.position.y < 0:
